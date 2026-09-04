@@ -1,0 +1,7 @@
+{
+  "provider": "ollama",
+  "base_url": "http://localhost:11434",
+  "model": "gemma2:2b",
+  "timeout_seconds": 300,
+  "role": "RichardLab local AI"
+}
