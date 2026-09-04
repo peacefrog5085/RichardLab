@@ -1,0 +1,117 @@
+#!/usr/bin/env bash
+
+LAB="$HOME/RichardLab"
+
+pause_screen() {
+    echo
+    read -rp "Press ENTER to return..."
+}
+
+while true; do
+    clear
+
+    echo "╔════════════════════════════════════════════════════════════╗"
+    echo "║                    EXPERIMENT CENTER                     ║"
+    echo "╚════════════════════════════════════════════════════════════╝"
+    echo
+    echo "  1) LIST EXPERIMENTS"
+    echo "  2) INSPECT EXPERIMENT"
+    echo "  3) LATEST EXPERIMENT"
+    echo "  4) EXPERIMENT COUNT"
+    echo "  5) RECENT EXPERIMENT ACTIVITY"
+    echo
+    echo "  B) BACK"
+    echo
+
+    read -rp "Select: " choice
+
+    case "$choice" in
+        1)
+            clear
+            echo "EXPERIMENTS"
+            echo "────────────────────────────────────────────────────────────"
+            echo
+            find "$LAB/experiments" \
+                -maxdepth 1 \
+                -type f \
+                \( -name "*.py" -o -name "*.sh" \) \
+                -printf '%f\n' \
+                | sort
+            pause_screen
+            ;;
+
+        2)
+            "$LAB/mission_control/inspect_experiment.sh"
+            ;;
+
+        3)
+            clear
+            echo "LATEST EXPERIMENT"
+            echo "────────────────────────────────────────────────────────────"
+            echo
+
+            latest="$(find "$LAB/experiments" \
+                -maxdepth 1 \
+                -type f \
+                \( -name "*.py" -o -name "*.sh" \) \
+                -printf '%T@ %p\n' \
+                | sort -nr \
+                | head -n 1 \
+                | cut -d' ' -f2-)"
+
+            if [[ -n "$latest" ]]; then
+                basename "$latest"
+                echo
+                stat -c "Modified : %y%nSize     : %s bytes" "$latest"
+            else
+                echo "No experiments found."
+            fi
+
+            pause_screen
+            ;;
+
+        4)
+            clear
+            echo "EXPERIMENT COUNT"
+            echo "────────────────────────────────────────────────────────────"
+            echo
+
+            count="$(find "$LAB/experiments" \
+                -maxdepth 1 \
+                -type f \
+                \( -name "*.py" -o -name "*.sh" \) \
+                | wc -l)"
+
+            echo "Registered experiment programs: $count"
+            pause_screen
+            ;;
+
+        5)
+            clear
+            echo "RECENT EXPERIMENT ACTIVITY"
+            echo "────────────────────────────────────────────────────────────"
+            echo
+
+            find "$LAB/experiments" \
+                -maxdepth 1 \
+                -type f \
+                \( -name "*.py" -o -name "*.sh" \) \
+                -printf '%T@|%TY-%Tm-%Td %TH:%TM:%TS|%f\n' \
+                | sort -nr \
+                | head -n 10 \
+                | cut -d'|' -f2-
+
+            pause_screen
+            ;;
+
+        [bB])
+            exit 0
+            ;;
+
+        *)
+            echo
+            echo "Invalid selection."
+            sleep 1
+            ;;
+    esac
+done

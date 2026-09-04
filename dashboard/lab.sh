@@ -154,7 +154,7 @@ while true; do
             ;;
 
         5)
-            "$LAB/mission_control/inspect_experiment.sh"
+            "$LAB/mission_control/experiment_center.sh"
             ;;
 
         6)
