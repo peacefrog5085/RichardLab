@@ -1,3 +1,32 @@
 
 # Generated forensic reports
 forensics/forensic_report_*.json
+
+# Python virtual environment
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Generated reports and experiment output
+reports/
+*.png
+
+# Local data
+/data/
+logs/
+
+# Project-local generated data
+projects/*/logs/
+
+# Secrets / environment files
+.env
+.env.*
+*.pem
+*.key
+
+# OS/editor files
+.DS_Store
+.vscode/
+.idea/
