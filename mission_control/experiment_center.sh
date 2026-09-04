@@ -21,6 +21,8 @@ while true; do
     echo "  5) RECENT EXPERIMENT ACTIVITY"
     echo "  6) VIEW EXPERIMENT RESULTS"
     echo "  7) INSPECT RESULT"
+    echo "  8) RUN EXPERIMENT"
+    echo "  9) RUN HISTORY"
     echo
     echo "  B) BACK"
     echo
@@ -176,6 +178,14 @@ while true; do
 
         7)
             "$LAB/mission_control/inspect_result.sh"
+            ;;
+
+        8)
+            "$LAB/mission_control/run_experiment.sh"
+            ;;
+
+        9)
+            "$LAB/mission_control/run_history.sh"
             ;;
 
         [bB])
