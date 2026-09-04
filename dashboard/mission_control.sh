@@ -155,8 +155,9 @@ while true; do
     echo "  [2] SYSTEM STATUS"
     echo "  [3] PROJECT STATUS"
     echo "  [4] EXPERIMENT STATUS"
-    echo "  [5] INITIALIZE / REPAIR LAB"
-    echo "  [6] OPEN LAB DIRECTORY"
+    echo "  [5] FAMILY MAP"
+    echo "  [6] INITIALIZE / REPAIR LAB"
+    echo "  [7] OPEN LAB DIRECTORY"
     echo "  [0] EXIT"
     echo
     read -rp "MISSION CONTROL > " choice
@@ -179,11 +180,16 @@ while true; do
             ;;
 
         5)
-            create_structure
+            python3 "$LAB/mission_control/experiment_family_map.py"
             pause_screen
             ;;
 
         6)
+            create_structure
+            pause_screen
+            ;;
+
+        7)
             cd "$LAB" || exit
             bash
             ;;
