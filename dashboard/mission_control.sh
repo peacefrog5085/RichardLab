@@ -154,8 +154,9 @@ while true; do
     echo "  [1] PROJECTS"
     echo "  [2] SYSTEM STATUS"
     echo "  [3] PROJECT STATUS"
-    echo "  [4] INITIALIZE / REPAIR LAB"
-    echo "  [5] OPEN LAB DIRECTORY"
+    echo "  [4] EXPERIMENT STATUS"
+    echo "  [5] INITIALIZE / REPAIR LAB"
+    echo "  [6] OPEN LAB DIRECTORY"
     echo "  [0] EXIT"
     echo
     read -rp "MISSION CONTROL > " choice
@@ -174,11 +175,15 @@ while true; do
             ;;
 
         4)
+            "$LAB/mission_control/experiment_registry.sh"
+            ;;
+
+        5)
             create_structure
             pause_screen
             ;;
 
-        5)
+        6)
             cd "$LAB" || exit
             bash
             ;;
