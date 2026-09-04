@@ -154,16 +154,7 @@ while true; do
             ;;
 
         5)
-            clear
-            echo "EXPERIMENTS"
-            echo "────────────────────────────────────────"
-            echo
-            find "$LAB/experiments" \
-                -maxdepth 1 \
-                -type f \
-                -printf '%f\n' \
-                | sort
-            pause_screen
+            "$LAB/mission_control/inspect_experiment.sh"
             ;;
 
         6)
