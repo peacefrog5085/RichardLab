@@ -2,11 +2,16 @@
 
 LAB="$HOME/RichardLab"
 REGISTRY="$LAB/data/experiment_runs.csv"
+ARTIFACT_REGISTRY="$LAB/data/experiment_artifacts.csv"
 
 mkdir -p "$LAB/data"
 
 if [[ ! -f "$REGISTRY" ]]; then
     echo "run_id,experiment,start_time,end_time,duration_seconds,exit_status,result" > "$REGISTRY"
+fi
+
+if [[ ! -f "$ARTIFACT_REGISTRY" ]]; then
+    echo "run_id,experiment,artifact,artifact_type,size_bytes,modified_time,sha256" > "$ARTIFACT_REGISTRY"
 fi
 
 clear
@@ -87,6 +92,48 @@ printf '%s,%s,"%s","%s",%s,%s,%s\n' \
     "$duration" \
     "$exit_status" \
     "$result" >> "$REGISTRY"
+
+echo
+echo "ARTIFACT REGISTRATION"
+echo "────────────────────────────────────────────────────────────"
+
+stem="${experiment%.*}"
+report_stem="${stem//-/_}"
+
+mapfile -t artifacts < <(
+    find "$LAB/reports"         -maxdepth 1         -type f         -iname "*${report_stem}*"         -newermt "$start_time"         -printf '%p\n'         2>/dev/null         | sort
+)
+
+if [[ ${#artifacts[@]} -gt 0 ]]; then
+    for artifact_path in "${artifacts[@]}"; do
+        artifact="$(basename "$artifact_path")"
+        extension="${artifact##*.}"
+        size="$(stat -c '%s' "$artifact_path")"
+        modified="$(stat -c '%y' "$artifact_path" | cut -d'.' -f1)"
+        sha256="$(sha256sum "$artifact_path" | awk '{print $1}')"
+
+        case "${extension,,}" in
+            png|jpg|jpeg|gif|webp)
+                artifact_type="IMAGE"
+                ;;
+            txt|md|log)
+                artifact_type="TEXT"
+                ;;
+            csv|json|tsv)
+                artifact_type="DATA"
+                ;;
+            *)
+                artifact_type="${extension^^}"
+                ;;
+        esac
+
+        printf '%s,%s,%s,%s,%s,"%s",%s\n'             "$run_id"             "$experiment"             "$artifact"             "$artifact_type"             "$size"             "$modified"             "$sha256" >> "$ARTIFACT_REGISTRY"
+
+        echo "$artifact"
+    done
+else
+    echo "No new matching artifacts detected."
+fi
 
 echo
 echo "RUN COMPLETE"
