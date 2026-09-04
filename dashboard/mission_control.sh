@@ -151,51 +151,57 @@ while true; do
 
     echo "                    MAIN CONSOLE"
     echo
-    echo "  [1] PROJECTS"
-    echo "  [2] SYSTEM STATUS"
-    echo "  [3] PROJECT STATUS"
-    echo "  [4] EXPERIMENT STATUS"
-    echo "  [5] FAMILY MAP"
-    echo "  [6] LAB HEALTH"
-    echo "  [7] INITIALIZE / REPAIR LAB"
-    echo "  [8] OPEN LAB DIRECTORY"
+    echo "  [1] OVERVIEW"
+    echo "  [2] PROJECTS"
+    echo "  [3] SYSTEM STATUS"
+    echo "  [4] PROJECT STATUS"
+    echo "  [5] EXPERIMENT STATUS"
+    echo "  [6] FAMILY MAP"
+    echo "  [7] LAB HEALTH"
+    echo "  [8] INITIALIZE / REPAIR LAB"
+    echo "  [9] OPEN LAB DIRECTORY"
     echo "  [0] EXIT"
     echo
     read -rp "MISSION CONTROL > " choice
 
     case "$choice" in
         1)
-            show_projects
+            python3 "$LAB/mission_control/lab_overview.py"
+            pause_screen
             ;;
 
         2)
-            system_status
+            show_projects
             ;;
 
         3)
-            project_status
+            system_status
             ;;
 
         4)
-            "$LAB/mission_control/experiment_registry.sh"
+            project_status
             ;;
 
         5)
+            "$LAB/mission_control/experiment_registry.sh"
+            ;;
+
+        6)
             python3 "$LAB/mission_control/experiment_family_map.py"
             pause_screen
             ;;
 
-        6)
+        7)
             python3 "$LAB/mission_control/lab_health.py"
             pause_screen
             ;;
 
-        7)
+        8)
             create_structure
             pause_screen
             ;;
 
-        8)
+        9)
             cd "$LAB" || exit
             bash
             ;;
