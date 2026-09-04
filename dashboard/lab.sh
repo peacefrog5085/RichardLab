@@ -48,15 +48,9 @@ forensics_menu() {
 
             2)
                 echo
-                echo "Available forensic reports:"
+                echo "Available forensic snapshots:"
                 echo
-                find "$LAB/forensics" \
-                    -maxdepth 1 \
-                    -name 'forensic_report_*.json' \
-                    -type f \
-                    -printf '%f\n' \
-                    | sort
-
+                python "$LAB/forensics/report_utils.py"
                 echo
                 read -rp "OLD report path: " old_report
                 read -rp "NEW report path: " new_report
@@ -70,15 +64,9 @@ forensics_menu() {
 
             3)
                 echo
-                echo "Available forensic reports:"
+                echo "Available forensic snapshots:"
                 echo
-                find "$LAB/forensics" \
-                    -maxdepth 1 \
-                    -name 'forensic_report_*.json' \
-                    -type f \
-                    -printf '%f\n' \
-                    | sort
-
+                python "$LAB/forensics/report_utils.py"
                 echo
                 read -rp "Report path: " report
 
@@ -89,15 +77,26 @@ forensics_menu() {
 
             4)
                 clear
-                echo "FORENSIC REPORTS"
+                python "$LAB/forensics/report_utils.py"
+                pause_screen
+                ;;
+
+            5)
+                clear
+                echo "LATEST FORENSIC SNAPSHOT"
                 echo "────────────────────────────────────────"
                 echo
 
-                find "$LAB/forensics" \
-                    -maxdepth 1 \
-                    -type f \
-                    -printf '%TY-%Tm-%Td %TH:%TM  %f\n' \
-                    | sort -r
+                python - <<'PY2'
+from forensics.report_utils import latest_report
+
+report = latest_report()
+
+if report:
+    print(report)
+else:
+    print("No forensic snapshots found.")
+PY2
 
                 pause_screen
                 ;;
