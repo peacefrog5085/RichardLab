@@ -2,22 +2,32 @@
 
 LAB="$HOME/RichardLab"
 
-while true; do
+show_header() {
     clear
-
     echo "╔══════════════════════════════════════════════════════╗"
     echo "║              RICHARD DIGITAL LAB                    ║"
+    echo "║                  MISSION CONTROL v2                 ║"
     echo "╠══════════════════════════════════════════════════════╣"
+}
+
+pause_screen() {
+    echo
+    read -rp "Press ENTER to return to Mission Control..."
+}
+
+while true; do
+    show_header
+
     echo "║                                                      ║"
-    echo "║   1) SYSTEM SCANNER                                  ║"
-    echo "║   2) AI LAB                                          ║"
-    echo "║   3) DIGITAL FORENSICS                               ║"
-    echo "║   4) VALUE FLOW PROJECT                              ║"
-    echo "║   5) EXPERIMENTS                                     ║"
-    echo "║   6) MEDIA LAB                                       ║"
-    echo "║   7) KNOWLEDGE BASE                                  ║"
+    echo "║  1) SYSTEM STATUS                                    ║"
+    echo "║  2) PROCESS WATCH                                    ║"
+    echo "║  3) SYSTEM SCAN                                     ║"
+    echo "║  4) EXPERIMENTS                                     ║"
+    echo "║  5) REPORTS                                         ║"
+    echo "║  6) MODULE STATUS                                   ║"
+    echo "║  7) GIT STATUS                                      ║"
     echo "║                                                      ║"
-    echo "║   Q) EXIT                                            ║"
+    echo "║  Q) EXIT                                             ║"
     echo "║                                                      ║"
     echo "╚══════════════════════════════════════════════════════╝"
     echo
@@ -27,82 +37,71 @@ while true; do
     case "$choice" in
 
         1)
-            "$LAB/dashboard/lab-dashboard.sh"
-            read -rp "Press ENTER to return..."
+            python "$LAB/mission_control/lab_status.py"
+            pause_screen
             ;;
 
         2)
             clear
-            echo "╔══════════════════════════════════════╗"
-            echo "║              AI LAB                 ║"
-            echo "╚══════════════════════════════════════╝"
-            echo
-            echo "AI workspace:"
-            echo "$LAB/ai"
-            echo
-            echo "Local AI systems will live here."
-            read -rp "Press ENTER to return..."
+            python "$LAB/mission_control/process_probe.py"
             ;;
 
         3)
             clear
-            echo "╔══════════════════════════════════════╗"
-            echo "║          DIGITAL FORENSICS           ║"
-            echo "╚══════════════════════════════════════╝"
-            echo
-            echo "Evidence workspace:"
-            echo "$LAB/forensics"
-            echo
-            echo "Metadata, hashes, timelines and file analysis."
-            read -rp "Press ENTER to return..."
+            "$LAB/dashboard/system-scan.sh"
+            pause_screen
             ;;
 
         4)
             clear
-            echo "╔══════════════════════════════════════╗"
-            echo "║            VALUE FLOW                ║"
-            echo "╚══════════════════════════════════════╝"
+            echo "╔══════════════════════════════════════════════════════╗"
+            echo "║                    EXPERIMENTS                      ║"
+            echo "╚══════════════════════════════════════════════════════╝"
             echo
-            echo "Workspace:"
-            echo "$LAB/value_flow"
-            echo
-            echo "Economic relationships and value movement."
-            read -rp "Press ENTER to return..."
+            find "$LAB/experiments" -maxdepth 1 -type f -printf "%f\n" | sort
+            pause_screen
             ;;
 
         5)
             clear
-            echo "╔══════════════════════════════════════╗"
-            echo "║             EXPERIMENTS              ║"
-            echo "╚══════════════════════════════════════╝"
+            echo "╔══════════════════════════════════════════════════════╗"
+            echo "║                      REPORTS                        ║"
+            echo "╚══════════════════════════════════════════════════════╝"
             echo
-            echo "This is where the weird shit goes."
-            echo
-            echo "No assumptions."
-            echo "No sacred cows."
-            echo "Just hypotheses → experiments → results."
-            read -rp "Press ENTER to return..."
+            find "$LAB/reports" -maxdepth 1 -type f -printf "%TY-%Tm-%Td %TH:%TM  %f\n" \
+                | sort -r
+            pause_screen
             ;;
 
         6)
             clear
-            echo "╔══════════════════════════════════════╗"
-            echo "║              MEDIA LAB               ║"
-            echo "╚══════════════════════════════════════╝"
+            python "$LAB/mission_control/lab_status.py"
             echo
-            echo "OBS / FFmpeg / Kdenlive workspace."
-            read -rp "Press ENTER to return..."
+            echo "MODULE DIRECTORIES"
+            echo "────────────────────────────────────────"
+            for module in ai data dashboard experiments forensics knowledge media mission_control reports value_flow; do
+                if [ -d "$LAB/$module" ]; then
+                    count=$(find "$LAB/$module" -type f | wc -l)
+                    printf "%-18s %5s files\n" "$module" "$count"
+                else
+                    printf "%-18s MISSING\n" "$module"
+                fi
+            done
+            pause_screen
             ;;
 
         7)
             clear
-            echo "╔══════════════════════════════════════╗"
-            echo "║            KNOWLEDGE BASE            ║"
-            echo "╚══════════════════════════════════════╝"
+            echo "╔══════════════════════════════════════════════════════╗"
+            echo "║                    GIT STATUS                       ║"
+            echo "╚══════════════════════════════════════════════════════╝"
             echo
-            echo "Research notes and discoveries:"
-            echo "$LAB/knowledge"
-            read -rp "Press ENTER to return..."
+            git -C "$LAB" status
+            echo
+            echo "RECENT COMMITS"
+            echo "────────────────────────────────────────"
+            git -C "$LAB" log --oneline -5
+            pause_screen
             ;;
 
         q|Q)
@@ -113,8 +112,9 @@ while true; do
 
         *)
             echo
-            echo "Invalid command. Even computers require us to read menus."
+            echo "Invalid command."
             sleep 1
             ;;
+
     esac
 done
