@@ -156,8 +156,9 @@ while true; do
     echo "  [3] PROJECT STATUS"
     echo "  [4] EXPERIMENT STATUS"
     echo "  [5] FAMILY MAP"
-    echo "  [6] INITIALIZE / REPAIR LAB"
-    echo "  [7] OPEN LAB DIRECTORY"
+    echo "  [6] LAB HEALTH"
+    echo "  [7] INITIALIZE / REPAIR LAB"
+    echo "  [8] OPEN LAB DIRECTORY"
     echo "  [0] EXIT"
     echo
     read -rp "MISSION CONTROL > " choice
@@ -185,11 +186,16 @@ while true; do
             ;;
 
         6)
-            create_structure
+            python3 "$LAB/mission_control/lab_health.py"
             pause_screen
             ;;
 
         7)
+            create_structure
+            pause_screen
+            ;;
+
+        8)
             cd "$LAB" || exit
             bash
             ;;
