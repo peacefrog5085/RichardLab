@@ -137,10 +137,35 @@ while true; do
             echo "────────────────────────────────────────────────────────────"
             echo
 
-            matches=$(find "$LAB/reports" -maxdepth 1 -type f -iname "*${report_stem}*" -printf '%f\n' | sort)
+            mapfile -t matches < <(find "$LAB/reports" -maxdepth 1 -type f -iname "*${report_stem}*" | sort)
 
-            if [[ -n "$matches" ]]; then
-                printf '%s\n' "$matches"
+            if [[ ${#matches[@]} -gt 0 ]]; then
+                printf "%-34s %-8s %-12s %s\n" "FILE" "TYPE" "SIZE" "MODIFIED"
+                printf "%-34s %-8s %-12s %s\n" "----------------------------------" "--------" "------------" "-------------------"
+
+                for report in "${matches[@]}"; do
+                    filename="$(basename "$report")"
+                    type="${filename##*.}"
+                    size="$(stat -c '%s' "$report")"
+                    modified="$(stat -c '%y' "$report" | cut -d'.' -f1)"
+
+                    case "${type,,}" in
+                        png|jpg|jpeg|gif|webp)
+                            category="IMAGE"
+                            ;;
+                        txt|md|log)
+                            category="TEXT"
+                            ;;
+                        csv|json|tsv)
+                            category="DATA"
+                            ;;
+                        *)
+                            category="${type^^}"
+                            ;;
+                    esac
+
+                    printf "%-34s %-8s %-12s %s\n"                         "$filename" "$category" "$size bytes" "$modified"
+                done
             else
                 echo "No report files found matching: $stem"
             fi
