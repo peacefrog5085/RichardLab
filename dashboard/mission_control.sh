@@ -122,31 +122,7 @@ system_status() {
 }
 
 project_status() {
-    header
-
-    echo "PROJECT STATUS"
-    echo "──────────────────────────────────────────────────────────"
-    echo
-
-    for project in \
-        "value_flow" \
-        "land_project" \
-        "credit_cleanup" \
-        "ai_lab" \
-        "media_lab"
-    do
-        if [ -d "$LAB/projects/$project" ]; then
-            echo "  ✓ $project"
-        else
-            echo "  ○ $project"
-        fi
-    done
-
-    echo
-    echo "Project directories:"
-    find "$LAB/projects" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | sort
-
-    pause_screen
+    "$LAB/mission_control/project_registry.sh"
 }
 
 create_structure() {
