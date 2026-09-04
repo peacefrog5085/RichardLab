@@ -23,6 +23,7 @@ while true; do
     echo "  7) INSPECT RESULT"
     echo "  8) RUN EXPERIMENT"
     echo "  9) RUN HISTORY"
+    echo "  P) PROVENANCE VIEW"
     echo
     echo "  B) BACK"
     echo
@@ -186,6 +187,10 @@ while true; do
 
         9)
             "$LAB/mission_control/run_history.sh"
+            ;;
+
+        [Pp])
+            "$LAB/mission_control/provenance_view.sh"
             ;;
 
         [bB])
