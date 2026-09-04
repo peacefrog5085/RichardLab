@@ -20,6 +20,7 @@ while true; do
     echo "  4) EXPERIMENT COUNT"
     echo "  5) RECENT EXPERIMENT ACTIVITY"
     echo "  6) VIEW EXPERIMENT RESULTS"
+    echo "  7) INSPECT RESULT"
     echo
     echo "  B) BACK"
     echo
@@ -171,6 +172,10 @@ while true; do
             fi
 
             pause_screen
+            ;;
+
+        7)
+            "$LAB/mission_control/inspect_result.sh"
             ;;
 
         [bB])
