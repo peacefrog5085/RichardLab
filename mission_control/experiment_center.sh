@@ -19,6 +19,7 @@ while true; do
     echo "  3) LATEST EXPERIMENT"
     echo "  4) EXPERIMENT COUNT"
     echo "  5) RECENT EXPERIMENT ACTIVITY"
+    echo "  6) VIEW EXPERIMENT RESULTS"
     echo
     echo "  B) BACK"
     echo
@@ -100,6 +101,49 @@ while true; do
                 | sort -nr \
                 | head -n 10 \
                 | cut -d'|' -f2-
+
+            pause_screen
+            ;;
+
+        6)
+            clear
+            echo "VIEW EXPERIMENT RESULTS"
+            echo "────────────────────────────────────────────────────────────"
+            echo
+            echo "Available experiments:"
+            echo
+
+            find "$LAB/experiments" \
+                -maxdepth 1 \
+                -type f \
+                \( -name "*.py" -o -name "*.sh" \) \
+                -printf '%f\n' \
+                | sort
+
+            echo
+            read -rp "Experiment filename: " experiment
+
+            if [[ -z "$experiment" ]]; then
+                echo "No experiment selected."
+                pause_screen
+                continue
+            fi
+
+            stem="${experiment%.*}"
+            report_stem="${stem//-/_}"
+
+            echo
+            echo "RESULTS FOR: $experiment"
+            echo "────────────────────────────────────────────────────────────"
+            echo
+
+            matches=$(find "$LAB/reports" -maxdepth 1 -type f -iname "*${report_stem}*" -printf '%f\n' | sort)
+
+            if [[ -n "$matches" ]]; then
+                printf '%s\n' "$matches"
+            else
+                echo "No report files found matching: $stem"
+            fi
 
             pause_screen
             ;;
