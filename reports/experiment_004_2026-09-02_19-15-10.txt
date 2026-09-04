@@ -1,0 +1,60 @@
+============================================================
+          RICHARD DIGITAL LAB
+          EXPERIMENT #004
+          GPU / OPENGL CAPABILITY TEST
+============================================================
+
+Date: Wed Sep  2 07:15:10 PM EDT 2026
+
+---------------- GPU ----------------
+00:02.0 VGA compatible controller: Intel Corporation Iris Plus Graphics G1 (Ice Lake) (rev 07)
+
+---------------- OPENGL ----------------
+name of display: :0
+display: :0  screen: 0
+direct rendering: Yes
+Extended renderer info (GLX_MESA_query_renderer):
+    Vendor: Intel (0x8086)
+    Device: Mesa Intel(R) UHD Graphics (ICL GT1) (0x8a56)
+    Version: 25.2.8
+    Accelerated: yes
+    Video memory: 11753MB
+    Unified memory: yes
+    Preferred profile: core (0x1)
+    Max core profile version: 4.6
+    Max compat profile version: 4.6
+    Max GLES1 profile version: 1.1
+    Max GLES[23] profile version: 3.2
+OpenGL vendor string: Intel
+OpenGL renderer string: Mesa Intel(R) UHD Graphics (ICL GT1)
+OpenGL core profile version string: 4.6 (Core Profile) Mesa 25.2.8-0ubuntu0.24.04.2
+OpenGL core profile shading language version string: 4.60
+OpenGL core profile context flags: (none)
+OpenGL core profile profile mask: core profile
+
+OpenGL version string: 4.6 (Compatibility Profile) Mesa 25.2.8-0ubuntu0.24.04.2
+OpenGL shading language version string: 4.60
+OpenGL context flags: (none)
+OpenGL profile mask: compatibility profile
+
+OpenGL ES profile version string: OpenGL ES 3.2 Mesa 25.2.8-0ubuntu0.24.04.2
+OpenGL ES profile shading language version string: OpenGL ES GLSL ES 3.20
+
+
+---------------- DRM DEVICES ----------------
+total 0
+drwxr-xr-x  2 root root         80 Sep  1 15:34 by-path
+crw-rw----+ 1 root video  226,   1 Sep  1 15:34 card1
+crw-rw----+ 1 root render 226, 128 Sep  1 15:34 renderD128
+
+---------------- RENDER TEST ----------------
+Running 10-second OpenGL renderer test...
+
+Running synchronized to the vertical refresh.  The framerate should be
+approximately the same as the monitor refresh rate.
+295 frames in 5.0 seconds = 58.959 FPS
+301 frames in 5.0 seconds = 60.042 FPS
+
+============================================================
+EXPERIMENT COMPLETE
+============================================================

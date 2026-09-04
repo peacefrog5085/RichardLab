@@ -1,0 +1,68 @@
+============================================================
+          RICHARD DIGITAL LAB
+          EXPERIMENT #001
+          MACHINE CAPABILITY PROFILE
+============================================================
+
+Date: Wed Sep  2 07:03:37 PM EDT 2026
+Machine: rich-IdeaPad-3-15IIL05
+
+================ HARDWARE =================
+CPU:
+CPU(s):                                  4
+On-line CPU(s) list:                     0-3
+Model name:                              Intel(R) Core(TM) i3-1005G1 CPU @ 1.20GHz
+Thread(s) per core:                      2
+Core(s) per socket:                      2
+CPU(s) scaling MHz:                      89%
+NUMA node0 CPU(s):                       0-3
+
+Memory:
+               total        used        free      shared  buff/cache   available
+Mem:            11Gi       5.6Gi       627Mi       637Mi       6.5Gi       5.9Gi
+Swap:          5.7Gi        20Ki       5.7Gi
+
+Graphics:
+00:02.0 VGA compatible controller: Intel Corporation Iris Plus Graphics G1 (Ice Lake) (rev 07)
+
+Storage:
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sda2       468G   58G  386G  14% /
+
+================ CPU TEST =================
+Calculating SHA256 hashes...
+256 MB SHA256 test:
+0.804429 seconds
+
+================ DISK TEST ================
+512 MB sequential write:
+1.7716 seconds
+Approximate speed:
+289.004 MB/s
+
+================ COMPRESSION TEST =========
+256 MB gzip test:
+3.63209 seconds
+
+================ PYTHON TEST ===============
+Python computation: 0.3669 seconds
+Result checksum: 47999861
+
+================ SOFTWARE ==================
+Python:
+Python 3.12.3
+
+FFmpeg:
+ffmpeg version 6.1.1-3ubuntu5 Copyright (c) 2000-2023 the FFmpeg developers
+
+Git:
+git version 2.43.0
+
+================ RESULT ====================
+Experiment completed:
+Wed Sep  2 07:03:44 PM EDT 2026
+
+Report:
+/home/rich/RichardLab/reports/experiment_001_2026-09-02_19-03-37.txt
+
+============================================================

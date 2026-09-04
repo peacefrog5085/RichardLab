@@ -1,0 +1,24 @@
+RICHARDLAB #011d - EVOLUTION ANALYSIS
+============================================================
+
+CSV files analyzed: 1
+Total observations: 67
+
+WORLD: abundant
+Generations: 1 -> 9
+Speed change: +0.569
+Vision change: -20.255
+Energy change: +13.970
+
+WORLD: moving
+Generations: 1 -> 14
+Speed change: +0.853
+Vision change: -7.319
+Energy change: +20.209
+
+WORLD: scarce
+Generations: 1 -> 2
+Speed change: -0.012
+Vision change: +0.416
+Energy change: +3.959
+
