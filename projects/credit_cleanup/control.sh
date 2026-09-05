@@ -21,16 +21,14 @@ while true; do
     case "$choice" in
         1)
             echo
-            echo "Selected: Accounts"
+            python3 "$LAB/projects/credit_cleanup/credit_tools.py" accounts
             echo
-            echo "This module is ready for the next build."
             read -rp "Press ENTER to continue..."
             ;;
         2)
             echo
-            echo "Selected: Inquiries"
+            python3 "$LAB/projects/credit_cleanup/credit_tools.py" inquiries
             echo
-            echo "This module is ready for the next build."
             read -rp "Press ENTER to continue..."
             ;;
         3)
@@ -49,9 +47,14 @@ while true; do
             ;;
         5)
             echo
-            echo "Selected: Recovery Plan"
+            python3 "$LAB/projects/credit_cleanup/credit_tools.py" recovery
             echo
-            echo "This module is ready for the next build."
+            read -rp "Press ENTER to continue..."
+            ;;
+        6)
+            echo
+            python3 "$LAB/projects/credit_cleanup/ai_analyst.py"
+            echo
             read -rp "Press ENTER to continue..."
             ;;
         0)

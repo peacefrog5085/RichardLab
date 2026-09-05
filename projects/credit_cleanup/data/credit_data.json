@@ -1,0 +1,96 @@
+{
+  "accounts": [
+    {
+      "name": "KLARNA BNPL",
+      "status": "Collection",
+      "balance": 455,
+      "date_opened": "2025-09-07",
+      "is_adverse": true,
+      "source_report": "Experian"
+    },
+    {
+      "name": "ATLAS",
+      "status": "Current",
+      "balance": 62,
+      "date_opened": "2025-10-06",
+      "is_adverse": false,
+      "source_report": "Experian"
+    },
+    {
+      "name": "CAPITAL ONE",
+      "status": "Charge-off",
+      "balance": 526,
+      "date_opened": "2025-09-22",
+      "is_adverse": true,
+      "source_report": "Experian"
+    },
+    {
+      "name": "CHIME/THE BANCORP BANK",
+      "status": "Current",
+      "balance": 44,
+      "date_opened": "2026-01-11",
+      "is_adverse": false,
+      "source_report": "Experian"
+    },
+    {
+      "name": "CREDIT ONE BANK",
+      "status": "Charge-off",
+      "balance": 665,
+      "date_opened": "2025-10-06",
+      "is_adverse": true,
+      "source_report": "Experian"
+    },
+    {
+      "name": "CURRENT/CRB",
+      "status": "Open",
+      "balance": 25,
+      "date_opened": "2026-01-11",
+      "is_adverse": true,
+      "source_report": "Experian"
+    },
+    {
+      "name": "JEFFERSON CAPITAL SYSTEMS",
+      "status": "Collection",
+      "balance": 386,
+      "date_opened": "2023-12-07",
+      "is_adverse": true,
+      "source_report": "Experian"
+    },
+    {
+      "name": "KIKOFF LENDING LLC",
+      "status": "Charge-off",
+      "balance": 425,
+      "date_opened": "2025-05-02",
+      "is_adverse": true,
+      "source_report": "Experian"
+    },
+    {
+      "name": "SOUTHWEST CREDIT SYSTEMS",
+      "status": "Collection",
+      "balance": 103,
+      "date_opened": "2025-08-11",
+      "is_adverse": true,
+      "source_report": "Experian"
+    },
+    {
+      "name": "MISSION LANE TAB BANK",
+      "status": "Charge-off",
+      "balance": 501,
+      "date_opened": "2025-09-22",
+      "is_adverse": true,
+      "source_report": "Experian"
+    }
+  ],
+  "inquiries": [
+    {
+      "creditor": "CAPITAL ONE",
+      "date": "2025-09-22",
+      "type": "Individual"
+    },
+    {
+      "creditor": "SYNCBAMAZON",
+      "date": "2025-01-29",
+      "type": "Individual"
+    }
+  ]
+}

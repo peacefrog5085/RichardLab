@@ -4,23 +4,30 @@ import json
 import sys
 import time
 import urllib.request
-import urllib.error
 from pathlib import Path
 
+from .tools import call_tool
 
-LAB = Path(__file__).resolve().parent.parent
-CONFIG_FILE = LAB / "ai" / "config.json"
+
+AI_DIR = Path(__file__).resolve().parent
+CONFIG_PATH = AI_DIR / "config.json"
 
 
 def load_config():
-    with CONFIG_FILE.open("r", encoding="utf-8") as f:
+    with open(CONFIG_PATH, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
-def ollama_request(base_url, payload, timeout):
-    url = f"{base_url.rstrip('/')}/api/generate"
-    data = json.dumps(payload).encode("utf-8")
+def ask_model(config, prompt):
+    url = config["base_url"].rstrip("/") + "/api/generate"
 
+    payload = {
+        "model": config["model"],
+        "prompt": prompt,
+        "stream": False,
+    }
+
+    data = json.dumps(payload).encode("utf-8")
     request = urllib.request.Request(
         url,
         data=data,
@@ -28,61 +35,83 @@ def ollama_request(base_url, payload, timeout):
         method="POST",
     )
 
-    with urllib.request.urlopen(request, timeout=timeout) as response:
-        return json.loads(response.read().decode("utf-8"))
+    start = time.time()
+
+    with urllib.request.urlopen(
+        request,
+        timeout=config.get("timeout_seconds", 300),
+    ) as response:
+        result = json.loads(response.read().decode("utf-8"))
+
+    elapsed = time.time() - start
+
+    return result, elapsed
+
+
+def build_lab_prompt(user_prompt, lab_status):
+    status_json = json.dumps(lab_status, indent=2)
+
+    return f"""
+You are the local AI assistant for RichardLab.
+
+You have been given authoritative structured data from a RichardLab tool.
+
+Treat the supplied tool data as the source of truth.
+Do not invent measurements, files, experiment results, or system states.
+If the data does not contain an answer, say that clearly.
+
+Explain the lab state in plain language.
+Be concise but useful.
+
+USER REQUEST:
+{user_prompt}
+
+TOOL: get_lab_status
+
+TOOL RESULT:
+{status_json}
+
+Now answer the user's request using the tool result.
+"""
 
 
 def main():
-    config = load_config()
-
     if len(sys.argv) < 2:
-        print("Usage: python3 ai/gateway.py \"your prompt\"")
+        print("Usage: python3 ai/gateway.py \"your question\"")
         sys.exit(1)
 
-    prompt = " ".join(sys.argv[1:])
+    user_prompt = " ".join(sys.argv[1:])
+    config = load_config()
 
-    model = config["model"]
-    base_url = config["base_url"]
-    timeout = config.get("timeout_seconds", 300)
-
-    payload = {
-        "model": model,
-        "prompt": prompt,
-        "stream": False,
-    }
-
-    print(f"RichardLab AI")
-    print(f"Model: {model}")
+    print("RichardLab Local AI")
+    print("===================")
+    print(f"Model: {config['model']}")
+    print("Tool: get_lab_status")
     print()
-
-    start = time.perf_counter()
 
     try:
-        result = ollama_request(base_url, payload, timeout)
-    except urllib.error.URLError as e:
-        print(f"ERROR: Could not reach Ollama: {e}")
-        sys.exit(2)
-    except Exception as e:
-        print(f"ERROR: {e}")
-        sys.exit(3)
+        lab_status = call_tool("get_lab_status")
 
-    elapsed = time.perf_counter() - start
+        prompt = build_lab_prompt(user_prompt, lab_status)
 
-    response = result.get("response", "").strip()
+        result, elapsed = ask_model(config, prompt)
 
-    print(response)
-    print()
-    print("────────────────────────────────────────")
-    print(f"Response time: {elapsed:.2f} seconds")
+        response_text = result.get("response", "").strip()
 
-    eval_count = result.get("eval_count")
-    eval_duration = result.get("eval_duration")
+        print(response_text)
+        print()
+        print(f"Response time: {elapsed:.2f}s")
 
-    if eval_count and eval_duration:
-        seconds = eval_duration / 1_000_000_000
-        tok_per_sec = eval_count / seconds if seconds else 0
-        print(f"Generated:     {eval_count} tokens")
-        print(f"Generation:    {tok_per_sec:.2f} tokens/sec")
+        if "eval_count" in result and "eval_duration" in result:
+            eval_seconds = result["eval_duration"] / 1_000_000_000
+            if eval_seconds > 0:
+                tok_sec = result["eval_count"] / eval_seconds
+                print(f"Generated tokens: {result['eval_count']}")
+                print(f"Generation speed: {tok_sec:.2f} tok/s")
+
+    except Exception as exc:
+        print(f"AI gateway error: {exc}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

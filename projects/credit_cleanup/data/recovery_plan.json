@@ -1,0 +1,52 @@
+{
+  "disputes": [
+    {
+      "account": "KLARNA BNPL",
+      "status": "Not Started",
+      "last_updated": "2026-09-04",
+      "notes": ""
+    },
+    {
+      "account": "CAPITAL ONE",
+      "status": "Not Started",
+      "last_updated": "2026-09-04",
+      "notes": ""
+    },
+    {
+      "account": "CREDIT ONE BANK",
+      "status": "Not Started",
+      "last_updated": "2026-09-04",
+      "notes": ""
+    },
+    {
+      "account": "CURRENT/CRB",
+      "status": "Not Started",
+      "last_updated": "2026-09-04",
+      "notes": ""
+    },
+    {
+      "account": "JEFFERSON CAPITAL SYSTEMS",
+      "status": "Not Started",
+      "last_updated": "2026-09-04",
+      "notes": ""
+    },
+    {
+      "account": "KIKOFF LENDING LLC",
+      "status": "Not Started",
+      "last_updated": "2026-09-04",
+      "notes": ""
+    },
+    {
+      "account": "SOUTHWEST CREDIT SYSTEMS",
+      "status": "Not Started",
+      "last_updated": "2026-09-04",
+      "notes": ""
+    },
+    {
+      "account": "MISSION LANE TAB BANK",
+      "status": "Not Started",
+      "last_updated": "2026-09-04",
+      "notes": ""
+    }
+  ]
+}

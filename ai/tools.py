@@ -3,7 +3,7 @@
 import json
 from pathlib import Path
 
-from lab_tools import get_lab_status
+from .lab_tools import get_lab_status
 
 
 TOOLS = {
