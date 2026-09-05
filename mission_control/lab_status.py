@@ -15,6 +15,7 @@ MODULES = [
     "knowledge",
     "media",
     "mission_control",
+    "photo_lab",
     "reports",
     "value_flow",
 ]

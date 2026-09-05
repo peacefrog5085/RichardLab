@@ -1,0 +1,6 @@
+Metadata-Version: 2.4
+Name: richardlab
+Version: 0.1.0
+Requires-Dist: psutil
+Requires-Dist: requests
+Dynamic: requires-dist

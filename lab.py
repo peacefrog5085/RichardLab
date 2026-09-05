@@ -1,14 +1,10 @@
 #!/usr/bin/env python3
-import sys
 import subprocess
 import json
 from pathlib import Path
-
-# Add RichardLab root to sys.path so absolute imports work from anywhere
-LAB_ROOT = Path(__file__).resolve().parent
-sys.path.append(str(LAB_ROOT))
-
 from ai.gateway import load_config, ask_model
+
+LAB_ROOT = Path(__file__).resolve().parent
 
 def main():
     print("╔══════════════════════════════════════════════════════╗")

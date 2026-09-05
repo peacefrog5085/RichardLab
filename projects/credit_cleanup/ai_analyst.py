@@ -3,11 +3,9 @@ import json
 import sys
 from pathlib import Path
 
-# Add the root directory to the path so we can import from ai/
-LAB_ROOT = Path.home() / "RichardLab"
-sys.path.append(str(LAB_ROOT))
-
 from ai.gateway import load_config, ask_model
+
+LAB_ROOT = Path(__file__).resolve().parent.parent.parent
 
 def analyze_credit_status():
     data_path = LAB_ROOT / "projects" / "credit_cleanup" / "data"
