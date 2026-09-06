@@ -2,6 +2,14 @@
 
 LAB="$HOME/RichardLab"
 
+# Synchronize laptop power management before starting Mission Control.
+if [ -x "$LAB/tools/power_guard.sh" ]; then
+    "$LAB/tools/power_guard.sh"
+else
+    echo "WARNING: RichardLab power guard not found."
+fi
+
+
 clear
 
 header() {
