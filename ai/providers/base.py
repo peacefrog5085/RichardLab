@@ -21,6 +21,7 @@ class AIResponse:
     provider: str
     model: str
     success: bool = True
+    elapsed_seconds: float | None = None
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 
