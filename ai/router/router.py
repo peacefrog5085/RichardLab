@@ -1,137 +1,44 @@
-import time
+#!/usr/bin/env python3
 
-from .health import ProviderHealth
+from __future__ import annotations
+
+from ai.providers.base import AIRequest, AIResponse
+from ai.providers.local.ollama import OllamaProvider
 
 
 class AIRouter:
+    """
+    RichardLab AI routing layer.
 
-    def __init__(self, config, provider_factory):
-        self.config = config
-        self.provider_factory = provider_factory
+    Current policy:
+      1. Prefer local AI when available.
+      2. Return a clear failure when no provider is available.
 
-    def health(self):
-        results = {}
+    Cloud providers will be added without changing callers.
+    """
 
-        providers = self.config.get(
-            "providers",
-            {}
-        )
+    def __init__(self):
+        self.local = OllamaProvider()
 
-        for name in providers:
-            try:
-                provider = self.provider_factory(
-                    name,
-                    self.config
-                )
-
-                raw = provider.health()
-
-                status = raw.get(
-                    "status",
-                    "UNKNOWN"
-                )
-
-                if status == "READY":
-                    reason = None
-                else:
-                    reason = raw.get(
-                        "reason"
-                    ) or raw.get(
-                        "error"
-                    )
-
-                results[name] = ProviderHealth(
-                    provider=name,
-                    status=status,
-                    reason=reason,
-                    model=raw.get("model"),
-                    latency_seconds=raw.get(
-                        "elapsed_seconds"
-                    ),
-                    metadata=raw
-                )
-
-            except Exception as exc:
-                results[name] = ProviderHealth(
-                    provider=name,
-                    status="ERROR",
-                    reason=str(exc)
-                )
-
-        return results
-
-    def choose(self):
-        routing = self.config.get(
-            "routing",
-            {}
-        )
-
-        primary = routing.get(
-            "primary"
-        )
-
-        if not primary:
-            raise RuntimeError(
-                "No AI primary provider configured."
-            )
-
-        health = self.health()
-
-        primary_health = health.get(primary)
-
-        if primary_health and primary_health.usable:
-            provider = self.provider_factory(
-                primary,
-                self.config
-            )
-            return provider, health
-
-        fallback = routing.get(
-            "fallback"
-        )
-
-        if fallback:
-            fallback_health = health.get(
-                fallback
-            )
-
-            if fallback_health and fallback_health.usable:
-                provider = self.provider_factory(
-                    fallback,
-                    self.config
-                )
-                return provider, health
-
-        return None, health
-
-    def ask(self, prompt, system=None):
-        provider, health = self.choose()
-
-        if provider is None:
-            states = {
-                name: item.as_dict()
-                for name, item in health.items()
+    def status(self) -> dict:
+        return {
+            "local": {
+                "provider": self.local.name,
+                "available": self.local.available(),
+                "model": self.local.default_model,
             }
+        }
 
-            raise RuntimeError(
-                "No usable AI provider available. "
-                f"Provider states: {states}"
-            )
+    def ask(self, request: AIRequest) -> AIResponse:
+        if self.local.available():
+            return self.local.generate(request)
 
-        start = time.time()
-
-        result = provider.ask(
-            prompt,
-            system=system
+        return AIResponse(
+            text="",
+            provider="none",
+            model="none",
+            success=False,
+            metadata={
+                "error": "No AI provider is currently available."
+            },
         )
-
-        elapsed = time.time() - start
-
-        if result.metadata is None:
-            result.metadata = {}
-
-        result.metadata["router_elapsed_seconds"] = (
-            elapsed
-        )
-
-        return result, health
