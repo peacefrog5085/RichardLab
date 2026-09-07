@@ -124,64 +124,87 @@ class AIRouter:
                 f"Provider states: {states}"
             )
 
-        start = time.time()
+        routing = self.config.get("routing", {})
+        automatic_fallback = routing.get(
+            "allow_automatic_fallback",
+            False
+        )
+        fallback_name = routing.get("fallback")
 
-        try:
-            result = provider.ask(
-                prompt,
-                system=system
-            )
+        def execute(target_provider):
+            start = time.time()
 
-        except Exception as exc:
+            try:
+                result = target_provider.ask(
+                    prompt,
+                    system=system
+                )
+
+            except Exception as exc:
+                elapsed = time.time() - start
+                error_text = str(exc)
+
+                if "QUOTA_EXCEEDED" in error_text:
+                    status = "QUOTA_EXCEEDED"
+                elif "AUTH_REQUIRED" in error_text:
+                    status = "AUTH_REQUIRED"
+                else:
+                    status = "INFERENCE_ERROR"
+
+                health[target_provider.name] = ProviderHealth(
+                    provider=target_provider.name,
+                    status=status,
+                    reason=error_text,
+                    metadata={
+                        "runtime_failure": True,
+                        "elapsed_seconds": elapsed
+                    }
+                )
+
+                return None, exc
+
             elapsed = time.time() - start
 
-            error_text = str(exc)
+            if result.metadata is None:
+                result.metadata = {}
 
-            # Provider-specific runtime failure.
-            # Convert known failures into router-visible
-            # state without hiding the original error.
-            if "QUOTA_EXCEEDED" in error_text:
-                health[provider.name] = ProviderHealth(
-                    provider=provider.name,
-                    status="QUOTA_EXCEEDED",
-                    reason=error_text,
-                    metadata={
-                        "runtime_failure": True,
-                        "elapsed_seconds": elapsed
-                    }
+            result.metadata["router_elapsed_seconds"] = elapsed
+
+            return result, None
+
+        result, error = execute(provider)
+
+        if result is not None:
+            return result, health
+
+        # Runtime fallback is only permitted when explicitly enabled.
+        if (
+            automatic_fallback
+            and fallback_name
+            and fallback_name != provider.name
+        ):
+            fallback_health = health.get(fallback_name)
+
+            if fallback_health and fallback_health.usable:
+                fallback_provider = self.provider_factory(
+                    fallback_name,
+                    self.config
                 )
 
-            elif "AUTH_REQUIRED" in error_text:
-                health[provider.name] = ProviderHealth(
-                    provider=provider.name,
-                    status="AUTH_REQUIRED",
-                    reason=error_text,
-                    metadata={
-                        "runtime_failure": True,
-                        "elapsed_seconds": elapsed
-                    }
+                fallback_result, fallback_error = execute(
+                    fallback_provider
                 )
 
-            else:
-                health[provider.name] = ProviderHealth(
-                    provider=provider.name,
-                    status="INFERENCE_ERROR",
-                    reason=error_text,
-                    metadata={
-                        "runtime_failure": True,
-                        "elapsed_seconds": elapsed
-                    }
-                )
+                if fallback_result is not None:
+                    fallback_result.metadata[
+                        "router_fallback"
+                    ] = True
+                    fallback_result.metadata[
+                        "router_primary_provider"
+                    ] = provider.name
 
-            raise
+                    return fallback_result, health
 
-        elapsed = time.time() - start
+                error = fallback_error
 
-        if result.metadata is None:
-            result.metadata = {}
-
-        result.metadata["router_elapsed_seconds"] = (
-            elapsed
-        )
-
-        return result, health
+        raise error
