@@ -1,24 +1,21 @@
 {
   "routing": {
     "primary": "gemini",
-    "fallback": null,
-    "allow_automatic_fallback": false
+    "fallback": "ollama",
+    "allow_automatic_fallback": true
   },
-
   "providers": {
     "gemini": {
       "command": "gemini",
       "timeout_seconds": 120,
       "output_format": "json"
     },
-
     "ollama": {
       "base_url": "http://localhost:11434",
       "model": "gemma2:2b",
       "timeout_seconds": 60,
       "keep_alive": "10m"
     },
-
     "codex": {
       "command": "codex",
       "timeout_seconds": 300

@@ -2,7 +2,6 @@
 
 import json
 import sys
-import time
 from pathlib import Path
 
 from .providers import (
@@ -11,6 +10,7 @@ from .providers import (
     OllamaProvider,
 )
 from .router import AIRouter
+from .hive.core import HiveCore
 
 
 AI_DIR = Path(__file__).resolve().parent
@@ -42,66 +42,11 @@ def build_provider(name, config):
     )
 
 
-def get_provider(config, preferred=None):
-    routing = config.get("routing", {})
-
-    provider_name = (
-        preferred
-        or routing.get("primary")
-        or "codex"
+def build_router(config, provider_factory):
+    return AIRouter(
+        config,
+        provider_factory
     )
-
-    provider = build_provider(
-        provider_name,
-        config
-    )
-
-    health = provider.health()
-
-    if health.get("status") in (
-        "READY",
-    ):
-        return provider
-
-    fallback = routing.get(
-        "fallback"
-    )
-
-    if fallback and fallback != provider_name:
-        fallback_provider = build_provider(
-            fallback,
-            config
-        )
-
-        fallback_health = fallback_provider.health()
-
-        if fallback_health.get("status") == "READY":
-            return fallback_provider
-
-    raise RuntimeError(
-        f"No usable AI provider. "
-        f"Primary={provider_name}; "
-        f"health={health}"
-    )
-
-
-def build_lab_prompt(user_prompt, lab_status):
-    status_json = json.dumps(
-        lab_status,
-        indent=2
-    )
-
-    return f"""
-USER REQUEST:
-{user_prompt}
-
-AUTHORITATIVE RICHARDLAB DATA:
-{status_json}
-
-Use the supplied RichardLab data as the source of truth.
-Do not invent files, measurements, experiments, or system states.
-If the data does not contain an answer, say so clearly.
-"""
 
 
 def main():
@@ -113,53 +58,52 @@ def main():
         sys.exit(1)
 
     user_prompt = " ".join(sys.argv[1:])
-
     config = load_config()
-
-    from .tools import call_tool
 
     print("RichardLab AI Gateway")
     print("=====================")
 
     try:
-        lab_status = call_tool(
-            "get_lab_status"
+        hive = HiveCore(
+            config=config,
+            provider_factory=build_provider,
+            router_factory=build_router,
         )
 
-        prompt = build_lab_prompt(
-            user_prompt,
-            lab_status
-        )
+        result = hive.dispatch(user_prompt)
 
-        preferred = config.get(
-            "routing",
-            {}
-        ).get("primary")
+        print(f"Route: {result.route}")
+        print(f"Worker: {result.worker}")
+        print(f"Provider: {result.provider}")
 
-        provider = get_provider(
-            config,
-            preferred
-        )
+        if result.metadata:
+            if result.metadata.get("router_fallback"):
+                print("Router: automatic fallback used")
+                print(
+                    "Primary provider: "
+                    f"{result.metadata.get('router_primary_provider')}"
+                )
 
-        print(
-            f"Provider: {provider.name}"
-        )
+        print()
 
-        result = provider.ask(
-            prompt,
-            system=(
-                "You are the AI assistant "
-                "for RichardLab."
+        if isinstance(result.result, (dict, list)):
+            print(
+                json.dumps(
+                    result.result,
+                    indent=2,
+                    default=str
+                )
             )
-        )
+        else:
+            print(result.result)
 
         print()
-        print(result.text)
-        print()
-        print(
-            f"Provider time: "
-            f"{result.elapsed_seconds:.2f}s"
-        )
+
+        if result.elapsed_seconds is not None:
+            print(
+                f"Elapsed time: "
+                f"{result.elapsed_seconds:.2f}s"
+            )
 
     except Exception as exc:
         print(
