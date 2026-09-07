@@ -3,10 +3,14 @@
 import json
 import sys
 import time
-import urllib.request
 from pathlib import Path
 
-from .tools import call_tool
+from .providers import (
+    CodexProvider,
+    GeminiProvider,
+    OllamaProvider,
+)
+from .router import AIRouter
 
 
 AI_DIR = Path(__file__).resolve().parent
@@ -18,99 +22,149 @@ def load_config():
         return json.load(f)
 
 
-def ask_model(config, prompt):
-    url = config["base_url"].rstrip("/") + "/api/generate"
+def build_provider(name, config):
+    provider_config = config.get(
+        "providers",
+        {}
+    ).get(name, {})
 
-    payload = {
-        "model": config["model"],
-        "prompt": prompt,
-        "stream": False,
-    }
+    if name == "codex":
+        return CodexProvider(provider_config)
 
-    data = json.dumps(payload).encode("utf-8")
-    request = urllib.request.Request(
-        url,
-        data=data,
-        headers={"Content-Type": "application/json"},
-        method="POST",
+    if name == "gemini":
+        return GeminiProvider(provider_config)
+
+    if name == "ollama":
+        return OllamaProvider(provider_config)
+
+    raise ValueError(
+        f"Unknown AI provider: {name}"
     )
 
-    start = time.time()
 
-    with urllib.request.urlopen(
-        request,
-        timeout=config.get("timeout_seconds", 300),
-    ) as response:
-        result = json.loads(response.read().decode("utf-8"))
+def get_provider(config, preferred=None):
+    routing = config.get("routing", {})
 
-    elapsed = time.time() - start
+    provider_name = (
+        preferred
+        or routing.get("primary")
+        or "codex"
+    )
 
-    return result, elapsed
+    provider = build_provider(
+        provider_name,
+        config
+    )
+
+    health = provider.health()
+
+    if health.get("status") in (
+        "READY",
+    ):
+        return provider
+
+    fallback = routing.get(
+        "fallback"
+    )
+
+    if fallback and fallback != provider_name:
+        fallback_provider = build_provider(
+            fallback,
+            config
+        )
+
+        fallback_health = fallback_provider.health()
+
+        if fallback_health.get("status") == "READY":
+            return fallback_provider
+
+    raise RuntimeError(
+        f"No usable AI provider. "
+        f"Primary={provider_name}; "
+        f"health={health}"
+    )
 
 
 def build_lab_prompt(user_prompt, lab_status):
-    status_json = json.dumps(lab_status, indent=2)
+    status_json = json.dumps(
+        lab_status,
+        indent=2
+    )
 
     return f"""
-You are the local AI assistant for RichardLab.
-
-You have been given authoritative structured data from a RichardLab tool.
-
-Treat the supplied tool data as the source of truth.
-Do not invent measurements, files, experiment results, or system states.
-If the data does not contain an answer, say that clearly.
-
-Explain the lab state in plain language.
-Be concise but useful.
-
 USER REQUEST:
 {user_prompt}
 
-TOOL: get_lab_status
-
-TOOL RESULT:
+AUTHORITATIVE RICHARDLAB DATA:
 {status_json}
 
-Now answer the user's request using the tool result.
+Use the supplied RichardLab data as the source of truth.
+Do not invent files, measurements, experiments, or system states.
+If the data does not contain an answer, say so clearly.
 """
 
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python3 ai/gateway.py \"your question\"")
+        print(
+            "Usage: python -m ai.gateway "
+            "\"your question\""
+        )
         sys.exit(1)
 
     user_prompt = " ".join(sys.argv[1:])
+
     config = load_config()
 
-    print("RichardLab Local AI")
-    print("===================")
-    print(f"Model: {config['model']}")
-    print("Tool: get_lab_status")
-    print()
+    from .tools import call_tool
+
+    print("RichardLab AI Gateway")
+    print("=====================")
 
     try:
-        lab_status = call_tool("get_lab_status")
+        lab_status = call_tool(
+            "get_lab_status"
+        )
 
-        prompt = build_lab_prompt(user_prompt, lab_status)
+        prompt = build_lab_prompt(
+            user_prompt,
+            lab_status
+        )
 
-        result, elapsed = ask_model(config, prompt)
+        preferred = config.get(
+            "routing",
+            {}
+        ).get("primary")
 
-        response_text = result.get("response", "").strip()
+        provider = get_provider(
+            config,
+            preferred
+        )
 
-        print(response_text)
+        print(
+            f"Provider: {provider.name}"
+        )
+
+        result = provider.ask(
+            prompt,
+            system=(
+                "You are the AI assistant "
+                "for RichardLab."
+            )
+        )
+
         print()
-        print(f"Response time: {elapsed:.2f}s")
-
-        if "eval_count" in result and "eval_duration" in result:
-            eval_seconds = result["eval_duration"] / 1_000_000_000
-            if eval_seconds > 0:
-                tok_sec = result["eval_count"] / eval_seconds
-                print(f"Generated tokens: {result['eval_count']}")
-                print(f"Generation speed: {tok_sec:.2f} tok/s")
+        print(result.text)
+        print()
+        print(
+            f"Provider time: "
+            f"{result.elapsed_seconds:.2f}s"
+        )
 
     except Exception as exc:
-        print(f"AI gateway error: {exc}")
+        print(
+            f"AI gateway error: {exc}"
+        )
         sys.exit(1)
 
 

@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 
 import json
-from pathlib import Path
 
 from .lab_tools import get_lab_status
 
 
 TOOLS = {
     "get_lab_status": {
-        "description": "Return the current structured status of RichardLab, including system resources, module states, and activity.",
-        "function": get_lab_status,
+        "description": (
+            "Return the current structured status "
+            "of RichardLab, including system resources, "
+            "module states, and activity."
+        ),
+        "function": get_lab_status
     }
 }
 
@@ -25,10 +28,17 @@ def list_tools():
 
 def call_tool(name):
     if name not in TOOLS:
-        raise ValueError(f"Unknown tool: {name}")
+        raise ValueError(
+            f"Unknown tool: {name}"
+        )
 
     return TOOLS[name]["function"]()
 
 
 if __name__ == "__main__":
-    print(json.dumps(list_tools(), indent=2))
+    print(
+        json.dumps(
+            list_tools(),
+            indent=2
+        )
+    )

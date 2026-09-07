@@ -31,3 +31,4 @@ projects/*/logs/
 .vscode/
 .idea/
 /journal/
+ai/backups/
