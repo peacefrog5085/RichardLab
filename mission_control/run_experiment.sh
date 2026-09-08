@@ -7,7 +7,14 @@ ARTIFACT_REGISTRY="$LAB/data/experiment_artifacts.csv"
 mkdir -p "$LAB/data"
 
 if [[ ! -f "$REGISTRY" ]]; then
-    echo "run_id,experiment,start_time,end_time,duration_seconds,exit_status,result" > "$REGISTRY"
+    echo "run_id,experiment,git_commit,source_sha256,start_time,end_time,duration_seconds,exit_status,result" > "$REGISTRY"
+elif ! head -n 1 "$REGISTRY" | grep -q "git_commit,source_sha256"; then
+    tmp_registry="$(mktemp)"
+    {
+        echo "run_id,experiment,git_commit,source_sha256,start_time,end_time,duration_seconds,exit_status,result"
+        tail -n +2 "$REGISTRY" | awk -F',' 'BEGIN{OFS=","} NF>=7 {print $1,$2,"UNKNOWN","UNKNOWN",$3,$4,$5,$6,$7}'
+    } > "$tmp_registry"
+    mv "$tmp_registry" "$REGISTRY"
 fi
 
 if [[ ! -f "$ARTIFACT_REGISTRY" ]]; then
@@ -48,7 +55,7 @@ fi
 
 case "$experiment" in
     *.py)
-        command=(python3 "$target")
+        command=("$LAB/.venv/bin/python" "$target")
         ;;
     *.sh)
         command=(bash "$target")
@@ -60,6 +67,8 @@ case "$experiment" in
 esac
 
 run_id="$(date '+%Y%m%d_%H%M%S')"
+git_commit="$(git -C "$LAB" rev-parse HEAD 2>/dev/null || echo "UNKNOWN")"
+source_sha256="$(sha256sum "$target" | awk '{print $1}')"
 start_epoch="$(date +%s)"
 start_time="$(date '+%Y-%m-%d %H:%M:%S')"
 
@@ -68,6 +77,8 @@ echo "RUN START"
 echo "────────────────────────────────────────────────────────────"
 echo "Run ID    : $run_id"
 echo "Experiment: $experiment"
+echo "Git commit: $git_commit"
+echo "Source SHA : $source_sha256"
 echo "Started   : $start_time"
 echo
 
@@ -84,9 +95,11 @@ else
     result="FAILED"
 fi
 
-printf '%s,%s,"%s","%s",%s,%s,%s\n' \
+printf '%s,%s,%s,%s,"%s","%s",%s,%s,%s\n' \
     "$run_id" \
     "$experiment" \
+    "$git_commit" \
+    "$source_sha256" \
     "$start_time" \
     "$end_time" \
     "$duration" \
