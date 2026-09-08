@@ -162,6 +162,16 @@ else
 fi
 
 echo
+echo "KNOWLEDGE LEARNING"
+echo "────────────────────────────────────────────────────────────"
+
+if "$LAB/.venv/bin/python" "$LAB/knowledge/learn.py"; then
+    echo "Knowledge update: OK"
+else
+    echo "WARNING: Knowledge update failed; experiment result preserved."
+fi
+
+echo
 echo "RUN COMPLETE"
 echo "────────────────────────────────────────────────────────────"
 echo "Run ID    : $run_id"
