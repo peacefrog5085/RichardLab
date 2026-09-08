@@ -3,6 +3,7 @@
 LAB="$HOME/RichardLab"
 REGISTRY="$LAB/data/experiment_runs.csv"
 ARTIFACT_REGISTRY="$LAB/data/experiment_artifacts.csv"
+METRICS_REGISTRY="$LAB/data/experiment_metrics.csv"
 
 mkdir -p "$LAB/data"
 
@@ -19,6 +20,10 @@ fi
 
 if [[ ! -f "$ARTIFACT_REGISTRY" ]]; then
     echo "run_id,experiment,artifact,artifact_type,size_bytes,modified_time,sha256" > "$ARTIFACT_REGISTRY"
+fi
+
+if [[ ! -f "$METRICS_REGISTRY" ]]; then
+    echo "run_id,experiment,phase,timestamp,cpu_percent,ram_percent,swap_percent,disk_percent" > "$METRICS_REGISTRY"
 fi
 
 clear
@@ -72,6 +77,10 @@ source_sha256="$(sha256sum "$target" | awk '{print $1}')"
 start_epoch="$(date +%s)"
 start_time="$(date '+%Y-%m-%d %H:%M:%S')"
 
+metrics_start="$("$LAB/.venv/bin/python" -c 'import psutil; print(psutil.cpu_percent(interval=1), psutil.virtual_memory().percent, psutil.swap_memory().percent, psutil.disk_usage("/").percent)')"
+read -r start_cpu start_ram start_swap start_disk <<< "$metrics_start"
+printf '%s,%s,START,"%s",%s,%s,%s,%s\n' "$run_id" "$experiment" "$start_time" "$start_cpu" "$start_ram" "$start_swap" "$start_disk" >> "$METRICS_REGISTRY"
+
 echo
 echo "RUN START"
 echo "────────────────────────────────────────────────────────────"
@@ -87,6 +96,10 @@ exit_status=$?
 
 end_epoch="$(date +%s)"
 end_time="$(date '+%Y-%m-%d %H:%M:%S')"
+
+metrics_end="$("$LAB/.venv/bin/python" -c 'import psutil; print(psutil.cpu_percent(interval=1), psutil.virtual_memory().percent, psutil.swap_memory().percent, psutil.disk_usage("/").percent)')"
+read -r end_cpu end_ram end_swap end_disk <<< "$metrics_end"
+printf '%s,%s,END,"%s",%s,%s,%s,%s\n' "$run_id" "$experiment" "$end_time" "$end_cpu" "$end_ram" "$end_swap" "$end_disk" >> "$METRICS_REGISTRY"
 duration=$((end_epoch - start_epoch))
 
 if [[ $exit_status -eq 0 ]]; then
@@ -159,6 +172,7 @@ echo "Exit code : $exit_status"
 echo "Result    : $result"
 echo
 echo "Registry  : $REGISTRY"
+echo "Metrics   : $METRICS_REGISTRY"
 
 read -rp "Press ENTER to return..."
 exit "$exit_status"
