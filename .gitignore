@@ -32,3 +32,24 @@ projects/*/logs/
 .idea/
 /journal/
 ai/backups/
+
+# Local timestamped recovery snapshots
+*.backup-*
+*.before-*
+lab.backup-*
+
+# Local pre-change recovery snapshots
+*.bad-paste-backup
+*.pre-*
+
+# Local generated AI telemetry
+ai/data/
+
+# Local Mission Control recovery copies
+mission_control/run_experiment_before_*.sh
+
+# Music Lab generated inventories / review data
+music_lab/*.json
+
+# Music Lab local parser recovery copy
+music_lab/*_backup.py
