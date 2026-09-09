@@ -206,19 +206,227 @@ def searchable_text(record):
     return " ".join(parts)
 
 
+def _query_features(query):
+    """
+    Extract deterministic features from a knowledge query.
+
+    This deliberately stays lexical and inspectable. We want to distinguish
+    exact subjects and experiments from generic word overlap before adding
+    embeddings or other opaque retrieval machinery.
+    """
+    normalized = normalize(query)
+
+    experiment_matches = re.findall(
+        r"\bexperiment[- ]?\d{3}[a-z]?\.py\b",
+        normalized,
+    )
+
+    experiments = {
+        match.replace(" ", "-")
+        for match in experiment_matches
+    }
+
+    intents = set()
+
+    patterns = {
+        "about": (
+            "tell me about",
+            "what do we know",
+            "what does richardlab know",
+            "information about",
+        ),
+        "run": (
+            "run",
+            "execute",
+            "running",
+            "use to run",
+            "how to run",
+        ),
+        "failure": (
+            "fail",
+            "failed",
+            "failure",
+            "error",
+            "broken",
+            "not working",
+        ),
+        "constraint": (
+            "constraint",
+            "must",
+            "cannot",
+            "can't",
+            "should not",
+            "do not",
+            "don't",
+        ),
+        "recommendation": (
+            "recommend",
+            "recommendation",
+            "what should i use",
+            "best way",
+        ),
+    }
+
+    for intent, values in patterns.items():
+        if any(value in normalized for value in values):
+            intents.add(intent)
+
+    return {
+        "normalized": normalized,
+        "tokens": tokenize(normalized),
+        "experiments": experiments,
+        "intents": intents,
+    }
+
+
+def _field_tokens(record, field):
+    value = record.get(field, "")
+    if isinstance(value, list):
+        value = " ".join(str(item) for item in value)
+    return tokenize(value)
+
+
+def _experiment_matches(features, record):
+    """
+    Determine whether the user's query explicitly identifies this record's
+    experiment.
+
+    Experiment identity is treated as a first-class identifier rather than
+    ordinary lexical text.
+    """
+    source = record.get("source", {})
+    record_experiment = normalize(source.get("experiment", ""))
+    subject = normalize(record.get("subject", ""))
+
+    if not features.get("experiments"):
+        return False
+
+    for query_experiment in features["experiments"]:
+        if (
+            query_experiment == record_experiment
+            or query_experiment in subject
+            or query_experiment in record_experiment
+        ):
+            return True
+
+    return False
+
+
 def similarity(query, record):
-    query_tokens = tokenize(query)
-    record_tokens = tokenize(searchable_text(record))
+    """
+    Calculate relevance using subject, experiment identity, and query intent.
 
-    if not query_tokens or not record_tokens:
+    Exact experiment identity is authoritative, but the type of knowledge
+    preferred depends on what the user is asking.
+    """
+    features = _query_features(query)
+    query_tokens = features["tokens"]
+
+    if not query_tokens:
         return 0.0
 
-    overlap = query_tokens & record_tokens
+    subject_tokens = _field_tokens(record, "subject")
+    finding_tokens = _field_tokens(record, "finding")
+    reason_tokens = _field_tokens(record, "reason")
+    action_tokens = _field_tokens(record, "action")
+    tag_tokens = _field_tokens(record, "tags")
+    condition_tokens = (
+        _field_tokens(record, "conditions")
+        | _field_tokens(record, "applies_when")
+        | _field_tokens(record, "do_not")
+    )
 
-    if not overlap:
-        return 0.0
+    searchable = (
+        subject_tokens
+        | finding_tokens
+        | reason_tokens
+        | action_tokens
+        | tag_tokens
+        | condition_tokens
+    )
 
-    return len(overlap) / len(query_tokens)
+    lexical_overlap = query_tokens & searchable
+    lexical = len(lexical_overlap) / len(query_tokens)
+
+    subject_overlap = query_tokens & subject_tokens
+    subject = len(subject_overlap) / len(query_tokens)
+
+    experiment_match = _experiment_matches(features, record)
+
+    kind = normalize(record.get("kind", ""))
+    status = normalize(record.get("status", ""))
+
+    intent = 0.0
+
+    if "failure" in features["intents"]:
+        if kind == "known_failure" or status == "failed":
+            intent += 1.0
+
+    if "constraint" in features["intents"]:
+        if kind == "constraint" or status == "failed":
+            intent += 0.75
+
+    if "run" in features["intents"] or "recommendation" in features["intents"]:
+        if kind in {
+            "recommendation",
+            "instruction",
+            "constraint",
+            "known_failure",
+            "known_good",
+        }:
+            intent += 0.35
+
+    if "about" in features["intents"]:
+        if subject_overlap or experiment_match:
+            intent += 0.50
+
+    intent = min(intent, 1.0)
+
+    applicability_overlap = query_tokens & condition_tokens
+    applicability = len(applicability_overlap) / len(query_tokens)
+
+    if experiment_match:
+        # Keep exact-experiment matches strong without saturating at 1.0.
+        score = 0.82 + (0.04 * intent) + (0.03 * applicability)
+
+        if "about" in features["intents"]:
+            if kind in {"known_good", "recommendation"} or status == "passed":
+                score += 0.08
+
+        if "failure" in features["intents"]:
+            if kind == "known_failure" or status == "failed":
+                score += 0.10
+
+        if "constraint" in features["intents"]:
+            if kind in {"constraint", "known_failure"} or status == "failed":
+                score += 0.08
+
+        if "run" in features["intents"] or "recommendation" in features["intents"]:
+            # A successful execution baseline is the preferred answer to
+            # "what should I use to run this?"
+            if kind in {"known_good", "recommendation"} or status == "passed":
+                score += 0.10
+
+            # A known failure remains important, but is secondary unless
+            # the query explicitly asks about failure or constraints.
+            if kind in {"constraint", "known_failure"} or status == "failed":
+                score += 0.04
+
+        return min(score, 0.99)
+
+    score = (
+        lexical * 0.20
+        + subject * 0.35
+        + intent * 0.15
+        + applicability * 0.05
+    )
+
+    # Generic lexical matches without subject identity are deliberately weak.
+    if not subject_overlap:
+        score *= 0.50
+
+    return min(score, 1.0)
+
 
 
 def search_records(query, minimum=0.0):
@@ -248,39 +456,95 @@ def search_records(query, minimum=0.0):
     return results
 
 
-def recommendation(results):
+def recommendation(results, query=None):
     if not results:
         return {
             "decision": "NO_KNOWN_MEMORY",
-            "reason": "No sufficiently similar knowledge was found.",
+            "reason": "No sufficiently relevant knowledge was found.",
         }
 
     strongest = results[0][1]
+    strongest_score = results[0][0]
+
     kind = normalize(strongest.get("kind", ""))
     status = normalize(strongest.get("status", ""))
     confidence = normalize(strongest.get("confidence", "medium"))
 
-    # Explicit constraints and known failures are strongest.
+    query_features = _query_features(query or "")
+    intents = query_features.get("intents", set())
+
+    exact_experiment = _experiment_matches(
+        query_features,
+        strongest,
+    )
+
+    # Informational queries should retrieve knowledge without inheriting
+    # the operational severity of a failure memory.
+    if "about" in intents and not (
+        "failure" in intents
+        or "constraint" in intents
+        or "run" in intents
+    ):
+        if exact_experiment and strongest_score >= 0.45:
+            if kind in {"known_good", "recommendation"} or status == "passed":
+                return {
+                    "decision": "REUSE",
+                    "reason": (
+                        strongest.get("finding")
+                        or "Relevant knowledge about the requested experiment was found."
+                    ),
+                    "knowledge_id": strongest.get("knowledge_id"),
+                }
+
+            return {
+                "decision": "REVIEW",
+                "reason": (
+                    strongest.get("finding")
+                    or "Relevant knowledge about the requested experiment was found."
+                ),
+                "knowledge_id": strongest.get("knowledge_id"),
+            }
+
+    # Failure or constraint knowledge should BLOCK when the query is
+    # explicitly about failure, constraints, or execution, or when the
+    # strong match is clearly operationally relevant.
     if kind in {"constraint", "known_failure"} or status == "failed":
+        if (
+            "failure" in intents
+            or "constraint" in intents
+            or "run" in intents
+            or exact_experiment
+        ):
+            if strongest_score >= 0.60 or exact_experiment:
+                return {
+                    "decision": "BLOCK",
+                    "reason": (
+                        strongest.get("reason")
+                        or strongest.get("finding")
+                        or "A relevant previous failure or active constraint applies."
+                    ),
+                    "knowledge_id": strongest.get("knowledge_id"),
+                }
+
         return {
-            "decision": "BLOCK",
+            "decision": "REVIEW",
             "reason": (
-                strongest.get("reason")
-                or strongest.get("finding")
-                or "A previous failure or active constraint applies."
+                "A possible failure or constraint matched, but the evidence "
+                "is not specific enough to block this query."
             ),
             "knowledge_id": strongest.get("knowledge_id"),
         }
 
     if kind in {"known_good", "recommendation"} or status == "passed":
-        return {
-            "decision": "REUSE",
-            "reason": (
-                strongest.get("finding")
-                or "A previous successful approach was found."
-            ),
-            "knowledge_id": strongest.get("knowledge_id"),
-        }
+        if strongest_score >= 0.45:
+            return {
+                "decision": "REUSE",
+                "reason": (
+                    strongest.get("finding")
+                    or "A relevant previous successful approach was found."
+                ),
+                "knowledge_id": strongest.get("knowledge_id"),
+            }
 
     if status in {"partial", "inconclusive", "uncertain"}:
         return {
@@ -292,12 +556,12 @@ def recommendation(results):
             "knowledge_id": strongest.get("knowledge_id"),
         }
 
-    if confidence == "low":
+    if confidence == "low" or strongest_score < 0.45:
         return {
             "decision": "REVIEW",
             "reason": (
-                strongest.get("finding")
-                or "Low-confidence knowledge exists and should be reviewed."
+                "Related knowledge exists, but relevance or confidence "
+                "is not strong enough for automatic reuse."
             ),
             "knowledge_id": strongest.get("knowledge_id"),
         }
@@ -407,7 +671,7 @@ def cmd_search(args):
 
 def cmd_check(args):
     results = search_records(args.query, args.minimum)
-    decision = recommendation(results)
+    decision = recommendation(results, args.query)
 
     print("KNOWLEDGE CHECK")
     print("────────────────────────────────────────")
@@ -528,3 +792,40 @@ def main():
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+
+def consult(query, minimum=0.15, limit=5):
+    """
+    Return knowledge relevant to a query plus a recommendation.
+
+    This is the programmatic interface intended for Hive and other
+    RichardLab subsystems. It does not modify knowledge.
+    """
+    results = search_records(query, minimum=minimum)[:limit]
+    recommendation_result = recommendation(results, query)
+
+    return {
+        "query": query,
+        "decision": recommendation_result.get("decision"),
+        "reason": recommendation_result.get("reason"),
+        "knowledge_id": recommendation_result.get("knowledge_id"),
+        "matches": [
+            {
+                "score": round(score, 4),
+                "knowledge_id": record.get("knowledge_id"),
+                "kind": record.get("kind"),
+                "status": record.get("status"),
+                "subject": record.get("subject"),
+                "finding": record.get("finding"),
+                "reason": record.get("reason", ""),
+                "action": record.get("action", ""),
+                "do_not": record.get("do_not", []),
+                "conditions": record.get("conditions", []),
+                "applies_when": record.get("applies_when", []),
+                "confidence": record.get("confidence"),
+                "source": record.get("source", {}),
+                "evidence": record.get("evidence", []),
+            }
+            for score, record in results
+        ],
+    }

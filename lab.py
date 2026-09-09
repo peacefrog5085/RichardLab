@@ -1,49 +1,56 @@
 #!/usr/bin/env python3
-import subprocess
-import json
-from pathlib import Path
-from ai.gateway import load_config, ask_model
 
-LAB_ROOT = Path(__file__).resolve().parent
+import sys
+
+from ai.gateway import build_provider, build_router, load_config
+from ai.hive.core import HiveCore
+
 
 def main():
-    print("╔══════════════════════════════════════════════════════╗")
-    print("║                   RICHARDLAB GATEWAY                 ║")
-    print("╚══════════════════════════════════════════════════════╝")
-    intent = input("\nWhat is our goal today? ")
-    
-    if not intent.strip():
-        print("No intent provided. Exiting.")
-        return
+    if len(sys.argv) < 2:
+        print('Usage: ./lab.py "your question"')
+        sys.exit(1)
 
-    print(f"\nProcessing intent: '{intent}'...")
-    
-    # 1. Use AI to categorize the intent
+    prompt = " ".join(sys.argv[1:]).strip()
+
+    if not prompt:
+        print("No request provided.")
+        sys.exit(1)
+
     config = load_config()
-    prompt = f"""
-Analyze the user's intent: '{intent}'
-Respond ONLY with one of these keywords: 'credit_cleanup', 'system_status', 'forensics', 'experiment', 'unknown'.
-"""
-    result, _ = ask_model(config, prompt)
-    category = result.get("response", "").strip().lower()
 
-    print(f"Routing to: {category}")
+    print("RichardLab")
+    print("==========")
+    print()
 
-    # 2. Route to the appropriate tool or project
     try:
-        if "credit_cleanup" in category:
-            subprocess.run([str(LAB_ROOT / "projects" / "credit_cleanup" / "control.sh")])
-        elif "system_status" in category:
-            subprocess.run([str(LAB_ROOT / "dashboard" / "lab.sh")])
-        elif "experiment" in category:
-            subprocess.run([str(LAB_ROOT / "mission_control" / "experiment_center.sh")])
-        elif "forensics" in category:
-            # Forensics is currently inside lab.sh, could be refactored later
-            subprocess.run([str(LAB_ROOT / "dashboard" / "lab.sh")])
+        hive = HiveCore(
+            config=config,
+            provider_factory=build_provider,
+            router_factory=build_router,
+        )
+
+        result = hive.dispatch(prompt)
+
+        print(f"Route:    {result.route}")
+        print(f"Worker:   {result.worker}")
+        print(f"Provider: {result.provider}")
+        print()
+
+        if isinstance(result.result, (dict, list)):
+            import json
+            print(json.dumps(result.result, indent=2, default=str))
         else:
-            print(f"I'm not sure how to handle '{category}' yet.")
-    except Exception as e:
-        print(f"Error executing module: {e}")
+            print(result.result)
+
+        if result.elapsed_seconds is not None:
+            print()
+            print(f"Elapsed:  {result.elapsed_seconds:.2f}s")
+
+    except Exception as exc:
+        print(f"RichardLab error: {exc}")
+        sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

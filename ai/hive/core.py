@@ -8,6 +8,7 @@ from typing import Any
 from ..lab_tools_registry import load_registry
 from ..router.deterministic import classify
 from ..tool_registry import call_tool
+from knowledge.knowledge import consult
 
 
 @dataclass
@@ -58,6 +59,19 @@ class HiveCore:
         number = match.group(1)
         return f"experiment-{number}.py"
 
+    def _knowledge_consultation(self, prompt: str) -> dict[str, Any]:
+        """Consult durable RichardLab knowledge without modifying it."""
+        try:
+            return consult(prompt)
+        except Exception as exc:
+            return {
+                "query": prompt,
+                "decision": "REVIEW",
+                "reason": f"Knowledge consultation failed: {exc}",
+                "knowledge_id": None,
+                "matches": [],
+            }
+
     def _reasoning_evidence(self, prompt: str) -> tuple[str | None, dict[str, Any] | None]:
         try:
             experiment = self._extract_experiment(prompt)
@@ -76,6 +90,7 @@ class HiveCore:
         prompt: str,
         experiment: str | None,
         evidence: dict[str, Any] | None,
+        knowledge: dict[str, Any] | None = None,
     ) -> str:
         if evidence is None:
             return (
@@ -85,21 +100,19 @@ class HiveCore:
                 "Do not invent RichardLab-specific facts that are not supplied."
             )
 
+        # The context selector is authoritative for reasoning context.
+        # Do not independently re-expand source_files or other evidence here.
         compact_evidence = dict(evidence)
 
-        # Source code is deep evidence. Keep it available to the reasoning
-        # system, but label it explicitly so it knows it is raw source.
-        source_files = compact_evidence.pop("source_files", {})
+        if knowledge is None:
+            knowledge = self._knowledge_consultation(prompt)
+
+        compact_evidence["knowledge"] = knowledge
 
         evidence_json = json.dumps(
             compact_evidence,
             indent=2,
             default=str,
-        )
-
-        source_json = json.dumps(
-            source_files,
-            indent=2,
         )
 
         return f"""
@@ -116,6 +129,11 @@ Rules:
 6. Distinguish lab-level system metrics from experiment-specific metrics.
 7. When source code is supplied, compare the actual code rather than guessing.
 8. Keep conclusions proportional to the evidence.
+9. Treat durable knowledge as prior evidence, not unquestionable truth.
+10. If knowledge says BLOCK, explain the documented failure or constraint before recommending that approach.
+11. If knowledge says REUSE, identify the successful baseline and its conditions when relevant.
+12. If knowledge says CAUTION or REVIEW, explicitly preserve the uncertainty.
+13. Do not claim that a knowledge match proves the current situation is identical.
 
 USER REQUEST:
 {prompt}
@@ -123,11 +141,8 @@ USER REQUEST:
 TARGET EXPERIMENT:
 {experiment}
 
-STRUCTURED EVIDENCE:
+SELECTED RICHARDLAB EVIDENCE:
 {evidence_json}
-
-RAW SOURCE EVIDENCE:
-{source_json}
 """.strip()
 
     def dispatch_local(self, prompt, route):
@@ -204,10 +219,13 @@ RAW SOURCE EVIDENCE:
     def dispatch_reasoning(self, prompt):
         experiment, evidence = self._reasoning_evidence(prompt)
 
+        knowledge = self._knowledge_consultation(prompt)
+
         reasoning_prompt = self._build_reasoning_prompt(
             prompt,
             experiment,
             evidence,
+            knowledge,
         )
 
         router = self.router_factory(
@@ -228,6 +246,9 @@ RAW SOURCE EVIDENCE:
             },
             "evidence_collected": evidence is not None,
             "evidence_experiment": experiment,
+            "knowledge_decision": knowledge.get("decision"),
+            "knowledge_id": knowledge.get("knowledge_id"),
+            "knowledge_matches": len(knowledge.get("matches", [])),
         }
 
         if evidence is not None:

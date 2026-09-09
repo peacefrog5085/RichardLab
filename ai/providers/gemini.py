@@ -34,43 +34,15 @@ class GeminiProvider(AIProvider):
                 "reason": "gemini executable not found"
             }
 
-        try:
-            start = time.time()
-
-            result = subprocess.run(
-                [
-                    self.command,
-                    "--version"
-                ],
-                capture_output=True,
-                text=True,
-                timeout=5
-            )
-
-            elapsed = time.time() - start
-
-            if result.returncode != 0:
-                return {
-                    "provider": self.name,
-                    "status": "ERROR",
-                    "reason": result.stderr.strip(),
-                    "elapsed_seconds": elapsed
-                }
-
-            return {
-                "provider": self.name,
-                "status": "READY",
-                "command": executable,
-                "version": result.stdout.strip(),
-                "elapsed_seconds": elapsed
-            }
-
-        except Exception as exc:
-            return {
-                "provider": self.name,
-                "status": "ERROR",
-                "reason": str(exc)
-            }
+        # The Gemini CLI can take longer than a short health-check
+        # timeout to respond to --version even when inference works.
+        # Executable discovery is therefore the lightweight health check.
+        return {
+            "provider": self.name,
+            "status": "READY",
+            "command": executable,
+            "health_check": "executable_present"
+        }
 
     def ask(self, prompt, system=None):
         if system:
