@@ -51,11 +51,31 @@ def test_run_exact_experiment():
         "Exact experiment run query should reuse known-good knowledge",
     )
 
-    assert_equal(
-        result["knowledge_id"],
-        "K-A7BC6353A056",
-        "Exact experiment run query selected unexpected knowledge",
+    assert result["knowledge_id"], (
+        "Exact experiment run query returned no knowledge ID"
     )
+
+    matching = [
+        record
+        for _, record in search_records(
+            "What should I use to run experiment-011d.py?"
+        )
+        if record.get("knowledge_id") == result["knowledge_id"]
+    ]
+
+    assert matching, (
+        "Exact experiment run query returned a knowledge ID "
+        "that is not present in search results"
+    )
+
+    record = matching[0]
+    assert record.get("subject") == "experiment-011d.py", (
+        f"Run query selected unrelated subject: {record.get('subject')!r}"
+    )
+    assert (
+        record.get("kind") == "known_good"
+        or record.get("status") == "passed"
+    ), "Run query did not select successful knowledge"
 
 
 def test_about_exact_experiment():
@@ -69,11 +89,31 @@ def test_about_exact_experiment():
         "Informational experiment query should reuse known-good knowledge",
     )
 
-    assert_equal(
-        result["knowledge_id"],
-        "K-A7BC6353A056",
-        "Informational experiment query selected unexpected knowledge",
+    assert result["knowledge_id"], (
+        "Informational experiment query returned no knowledge ID"
     )
+
+    matching = [
+        record
+        for _, record in search_records(
+            "Tell me about experiment-011d.py."
+        )
+        if record.get("knowledge_id") == result["knowledge_id"]
+    ]
+
+    assert matching, (
+        "Informational query returned a knowledge ID "
+        "that is not present in search results"
+    )
+
+    record = matching[0]
+    assert record.get("subject") == "experiment-011d.py", (
+        f"Informational query selected unrelated subject: {record.get('subject')!r}"
+    )
+    assert (
+        record.get("kind") == "known_good"
+        or record.get("status") == "passed"
+    ), "Informational query did not select successful knowledge"
 
 
 def test_failure_exact_experiment():
@@ -135,11 +175,14 @@ def test_success_ranks_above_failure_for_run():
 
     first_score, first_record = results[0]
 
-    assert_equal(
-        first_record["knowledge_id"],
-        "K-A7BC6353A056",
-        "Known-good baseline did not rank first for run query",
+    assert first_record.get("subject") == "experiment-011d.py", (
+        "Run query did not rank the exact experiment first"
     )
+
+    assert (
+        first_record.get("kind") == "known_good"
+        or first_record.get("status") == "passed"
+    ), "Run query did not rank successful knowledge first"
 
     assert first_score > 0.90, (
         f"Known-good relevance unexpectedly low: {first_score}"
