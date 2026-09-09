@@ -1,0 +1,155 @@
+#!/home/rich/RichardLab/.venv/bin/python
+
+import sys
+import time
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent
+
+
+def run_status():
+    print()
+    print("════════════════════════════════════════════════════")
+    print("                 RICHARDLAB STATUS")
+    print("════════════════════════════════════════════════════")
+    print()
+
+    # Git
+    print("GIT")
+
+    import subprocess
+
+    def command(*args):
+        try:
+            result = subprocess.run(
+                args,
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            return result.returncode, result.stdout.strip(), result.stderr.strip()
+        except Exception as exc:
+            return 1, "", str(exc)
+
+    rc, branch, err = command("git", "branch", "--show-current")
+    print(f"  branch: {branch or 'UNKNOWN'}")
+
+    rc, head, err = command("git", "rev-parse", "--short", "HEAD")
+    print(f"  HEAD:   {head or 'UNKNOWN'}")
+
+    rc, porcelain, err = command("git", "status", "--porcelain")
+    print(f"  tree:   {'MODIFIED' if porcelain else 'CLEAN'}")
+
+    print()
+
+    # Python
+    print("PYTHON")
+    print(f"  executable: {sys.executable}")
+    print(f"  version:    {sys.version.split()[0]}")
+    print()
+
+    # Core imports
+    print("RICHARDLAB CORE")
+
+    core_modules = (
+        "ai.gateway",
+        "ai.hive.core",
+        "ai.hive.compass",
+        "ai.hive.context_selector",
+        "knowledge.knowledge",
+    )
+
+    for module in core_modules:
+        try:
+            __import__(module)
+            print(f"  ✓ {module}")
+        except Exception as exc:
+            print(f"  ✗ {module}")
+            print(f"      {type(exc).__name__}: {exc}")
+
+    print()
+
+    # Subsystems
+    print("SUBSYSTEMS")
+
+    paths = (
+        ("Gateway", ROOT / "ai" / "gateway.py"),
+        ("Hive", ROOT / "ai" / "hive"),
+        ("Photo Lab", ROOT / "photo_lab"),
+        ("Music Lab", ROOT / "music_lab"),
+        ("Data", ROOT / "data"),
+    )
+
+    for name, path in paths:
+        mark = "✓" if path.exists() else "·"
+        print(f"  {mark} {name:<12} {path.relative_to(ROOT)}")
+
+    print()
+
+    # Provider health
+    print("AI PROVIDERS")
+
+    try:
+        from ai.gateway import load_config, build_provider
+        from ai.router.router import AIRouter
+
+        config = load_config()
+        router = AIRouter(config, build_provider)
+
+        health = router.health()
+
+        for name, item in health.items():
+            model = f" [{item.model}]" if item.model else ""
+            reason = f" — {item.reason}" if item.reason else ""
+            print(
+                f"  {item.status:<15} {name}{model}{reason}"
+            )
+
+    except Exception as exc:
+        print(f"  ✗ provider health unavailable")
+        print(f"      {type(exc).__name__}: {exc}")
+
+    print()
+
+    # Knowledge
+    print("KNOWLEDGE")
+
+    knowledge_file = ROOT / "knowledge" / "knowledge.jsonl"
+
+    if knowledge_file.exists():
+        try:
+            with knowledge_file.open("r", encoding="utf-8") as handle:
+                records = sum(
+                    1
+                    for line in handle
+                    if line.strip()
+                )
+            print(f"  records: {records}")
+        except Exception as exc:
+            print(f"  ✗ unable to read knowledge store: {exc}")
+    else:
+        print("  · knowledge store not present")
+
+    print()
+
+    print("════════════════════════════════════════════════════")
+    print("STATUS CHECK COMPLETE")
+    print("════════════════════════════════════════════════════")
+    print()
+
+
+def usage():
+    print("RichardLab command")
+    print()
+    print("Usage:")
+    print("  ./lab status")
+    print()
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2 or sys.argv[1] != "status":
+        usage()
+        sys.exit(1)
+
+    run_status()
