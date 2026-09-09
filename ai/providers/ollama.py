@@ -29,6 +29,21 @@ class OllamaProvider(AIProvider):
             "10m"
         )
 
+        self.num_thread = config.get(
+            "num_thread",
+            4
+        )
+
+        self.num_ctx = config.get(
+            "num_ctx",
+            1024
+        )
+
+        self.num_predict = config.get(
+            "num_predict",
+            512
+        )
+
     def health(self):
         start = time.time()
 
@@ -81,7 +96,12 @@ class OllamaProvider(AIProvider):
             "model": self.model,
             "prompt": prompt,
             "stream": False,
-            "keep_alive": self.keep_alive
+            "keep_alive": self.keep_alive,
+            "options": {
+                "num_thread": self.num_thread,
+                "num_ctx": self.num_ctx,
+                "num_predict": self.num_predict
+            }
         }
 
         data = json.dumps(payload).encode("utf-8")

@@ -101,13 +101,18 @@ class HiveCore:
             )
 
         # The context selector is authoritative for reasoning context.
-        # Do not independently re-expand source_files or other evidence here.
-        compact_evidence = dict(evidence)
-
+        # Always serialize the bounded reasoning packet rather than the
+        # complete evidence bundle.
         if knowledge is None:
             knowledge = self._knowledge_consultation(prompt)
 
-        compact_evidence["knowledge"] = knowledge
+        from ai.hive.context_selector import select_reasoning_context
+
+        compact_evidence = select_reasoning_context(
+            prompt,
+            evidence,
+            knowledge=knowledge,
+        )
 
         evidence_json = json.dumps(
             compact_evidence,

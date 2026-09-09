@@ -12,9 +12,12 @@
     },
     "ollama": {
       "base_url": "http://localhost:11434",
-      "model": "llama3.2:3b",
+      "model": "gemma2:2b",
       "timeout_seconds": 60,
-      "keep_alive": "10m"
+      "keep_alive": "10m",
+      "num_thread": 4,
+      "num_ctx": 1024,
+      "num_predict": 512
     },
     "codex": {
       "command": "codex",
