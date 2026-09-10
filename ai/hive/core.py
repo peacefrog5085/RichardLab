@@ -8,6 +8,10 @@ from typing import Any
 from ..lab_tools_registry import load_registry
 from ..router.deterministic import classify
 from ..tool_registry import call_tool
+from ..workers import WorkerRegistry
+from ..workers.gemini import GeminiWorker
+from ..workers.ollama import OllamaWorker
+from ..workers.codex import CodexWorker
 from knowledge.knowledge import consult
 
 
@@ -36,7 +40,28 @@ class HiveCore:
         self.config = config
         self.provider_factory = provider_factory
         self.router_factory = router_factory
+
+        self.worker_registry = WorkerRegistry()
+        self._register_workers()
+
         self._ensure_registry()
+
+    def _register_workers(self):
+        workers = (
+            GeminiWorker(self.config, self.provider_factory),
+            OllamaWorker(self.config, self.provider_factory),
+            CodexWorker(self.config, self.provider_factory),
+        )
+
+        for worker in workers:
+            self.worker_registry.register(worker)
+
+    def worker_info(self) -> list[dict[str, Any]]:
+        """Return the currently registered Hive workers."""
+        return [
+            worker.info()
+            for worker in self.worker_registry.list()
+        ]
 
     def _ensure_registry(self):
         try:
