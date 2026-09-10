@@ -259,6 +259,18 @@ SELECTED RICHARDLAB EVIDENCE:
                 f"No AI worker capability mapped for route: {route}"
             )
 
+        # WorkerPolicy decides WHO should perform the task.
+        # Hive owns execution so the selected worker is actually used.
+        worker_decision = self.worker_policy.select(capability)
+
+        if worker_decision.selected is None:
+            raise RuntimeError(
+                "No worker selected for capability "
+                f"{capability}: {worker_decision.reason}"
+            )
+
+        worker = self.worker_registry.get(worker_decision.selected)
+
         experiment, evidence = self._reasoning_evidence(prompt)
 
         knowledge = self._knowledge_consultation(prompt)
@@ -270,17 +282,47 @@ SELECTED RICHARDLAB EVIDENCE:
             knowledge,
         )
 
-        router = self.router_factory(
-            self.config,
-            self.provider_factory,
+        routing = self.config.get("routing", {})
+        automatic_fallback = routing.get(
+            "allow_automatic_fallback",
+            False,
         )
+        fallback_name = routing.get("fallback")
 
-        result, health = router.ask(
-            reasoning_prompt,
-            system="You are the reasoning system for RichardLab.",
-        )
+        provider_result = None
+        execution_error = None
+        executed_worker = worker
+        fallback_used = False
 
-        worker_decision = self.worker_policy.select(capability)
+        try:
+            provider_result = worker.execute(
+                reasoning_prompt,
+                system="You are the reasoning system for RichardLab.",
+            )
+        except Exception as exc:
+            execution_error = exc
+
+            if (
+                automatic_fallback
+                and fallback_name
+                and fallback_name != worker.name
+                and fallback_name in worker_decision.candidates
+            ):
+                fallback_worker = self.worker_registry.get(fallback_name)
+
+                try:
+                    fallback_worker.health()
+                    provider_result = fallback_worker.execute(
+                        reasoning_prompt,
+                        system="You are the reasoning system for RichardLab.",
+                    )
+                    executed_worker = fallback_worker
+                    fallback_used = True
+                except Exception as fallback_exc:
+                    execution_error = fallback_exc
+
+            if provider_result is None:
+                raise execution_error
 
         metadata = {
             "worker_selection": {
@@ -290,17 +332,22 @@ SELECTED RICHARDLAB EVIDENCE:
                 "policy": worker_decision.policy,
                 "reason": worker_decision.reason,
             },
-            "provider_metadata": result.metadata or {},
-            "provider_health": {
-                name: state.as_dict()
-                for name, state in health.items()
+            "worker_execution": {
+                "selected": worker.name,
+                "executed": executed_worker.name,
+                "fallback_used": fallback_used,
             },
+            "provider_metadata": provider_result.metadata or {},
             "evidence_collected": evidence is not None,
             "evidence_experiment": experiment,
             "knowledge_decision": knowledge.get("decision"),
             "knowledge_id": knowledge.get("knowledge_id"),
             "knowledge_matches": len(knowledge.get("matches", [])),
         }
+
+        if fallback_used:
+            metadata["router_fallback"] = True
+            metadata["router_primary_provider"] = worker.name
 
         if evidence is not None:
             metadata["evidence_summary"] = {
@@ -318,10 +365,10 @@ SELECTED RICHARDLAB EVIDENCE:
 
         return HiveResult(
             route="ai_reasoning",
-            worker="reasoning",
-            result=result.text,
-            provider=result.provider,
-            elapsed_seconds=result.elapsed_seconds,
+            worker=executed_worker.name,
+            result=provider_result.text,
+            provider=provider_result.provider,
+            elapsed_seconds=provider_result.elapsed_seconds,
             metadata=metadata,
         )
 
