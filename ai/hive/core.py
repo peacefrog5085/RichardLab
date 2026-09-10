@@ -7,6 +7,7 @@ from typing import Any
 
 from ..lab_tools_registry import load_registry
 from ..router.deterministic import classify
+from ..router.capabilities import capability_for_route
 from ..tool_registry import call_tool
 from ..workers import WorkerRegistry, WorkerPolicy
 from ..workers.gemini import GeminiWorker
@@ -250,7 +251,14 @@ SELECTED RICHARDLAB EVIDENCE:
             f"No deterministic worker registered for route: {route}"
         )
 
-    def dispatch_reasoning(self, prompt):
+    def dispatch_reasoning(self, prompt, route="ai_reasoning"):
+        capability = capability_for_route(route)
+
+        if capability is None:
+            raise RuntimeError(
+                f"No AI worker capability mapped for route: {route}"
+            )
+
         experiment, evidence = self._reasoning_evidence(prompt)
 
         knowledge = self._knowledge_consultation(prompt)
@@ -272,7 +280,7 @@ SELECTED RICHARDLAB EVIDENCE:
             system="You are the reasoning system for RichardLab.",
         )
 
-        worker_decision = self.worker_policy.select("reasoning")
+        worker_decision = self.worker_policy.select(capability)
 
         metadata = {
             "worker_selection": {
@@ -321,6 +329,6 @@ SELECTED RICHARDLAB EVIDENCE:
         route = classify(prompt)
 
         if route == "ai_reasoning":
-            return self.dispatch_reasoning(prompt)
+            return self.dispatch_reasoning(prompt, route=route)
 
         return self.dispatch_local(prompt, route)
