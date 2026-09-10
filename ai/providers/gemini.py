@@ -22,6 +22,10 @@ class GeminiProvider(AIProvider):
             120
         )
 
+        self.model = config.get(
+            "model"
+        )
+
     def health(self):
         executable = shutil.which(
             self.command
@@ -53,11 +57,20 @@ class GeminiProvider(AIProvider):
 
         command = [
             self.command,
+        ]
+
+        if self.model:
+            command.extend([
+                "--model",
+                self.model,
+            ])
+
+        command.extend([
             "-p",
             prompt,
             "--output-format",
             "json"
-        ]
+        ])
 
         start = time.time()
 
@@ -122,7 +135,7 @@ class GeminiProvider(AIProvider):
         return AIResponse(
             text=text,
             provider=self.name,
-            model="gemini-cli",
+            model=self.model or "gemini-cli",
             elapsed_seconds=elapsed,
             metadata={
                 "session_id": data.get(
