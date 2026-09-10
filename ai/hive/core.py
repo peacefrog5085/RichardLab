@@ -8,7 +8,7 @@ from typing import Any
 from ..lab_tools_registry import load_registry
 from ..router.deterministic import classify
 from ..tool_registry import call_tool
-from ..workers import WorkerRegistry
+from ..workers import WorkerRegistry, WorkerPolicy
 from ..workers.gemini import GeminiWorker
 from ..workers.ollama import OllamaWorker
 from ..workers.codex import CodexWorker
@@ -43,6 +43,10 @@ class HiveCore:
 
         self.worker_registry = WorkerRegistry()
         self._register_workers()
+        self.worker_policy = WorkerPolicy(
+            self.worker_registry,
+            self.config,
+        )
 
         self._ensure_registry()
 
@@ -268,7 +272,16 @@ SELECTED RICHARDLAB EVIDENCE:
             system="You are the reasoning system for RichardLab.",
         )
 
+        worker_decision = self.worker_policy.select("reasoning")
+
         metadata = {
+            "worker_selection": {
+                "capability": worker_decision.capability,
+                "candidates": list(worker_decision.candidates),
+                "selected": worker_decision.selected,
+                "policy": worker_decision.policy,
+                "reason": worker_decision.reason,
+            },
             "provider_metadata": result.metadata or {},
             "provider_health": {
                 name: state.as_dict()
