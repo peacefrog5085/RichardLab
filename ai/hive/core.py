@@ -68,6 +68,20 @@ class HiveCore:
             for worker in self.worker_registry.list()
         ]
 
+    def heartbeat(self, path=None):
+        """
+        Read current RichardLab heartbeat state.
+
+        The heartbeat is deterministic and observational. It does not
+        invoke AI reasoning or mutate durable knowledge.
+        """
+        from mission_control.heartbeat import pulse
+
+        if path is None:
+            return pulse()
+
+        return pulse(path)
+
     def _ensure_registry(self):
         try:
             load_registry()
@@ -121,6 +135,7 @@ class HiveCore:
         experiment: str | None,
         evidence: dict[str, Any] | None,
         knowledge: dict[str, Any] | None = None,
+        heartbeat=None,
     ) -> str:
         if evidence is None:
             return (
@@ -142,6 +157,7 @@ class HiveCore:
             prompt,
             evidence,
             knowledge=knowledge,
+            heartbeat=heartbeat,
         )
 
         evidence_json = json.dumps(
@@ -275,11 +291,17 @@ SELECTED RICHARDLAB EVIDENCE:
 
         knowledge = self._knowledge_consultation(prompt)
 
+        # Heartbeat is a quiet observational substrate. Capture one
+        # deterministic pulse for this reasoning cycle and pass the
+        # result into the bounded context selector.
+        heartbeat = self.heartbeat()
+
         reasoning_prompt = self._build_reasoning_prompt(
             prompt,
             experiment,
             evidence,
             knowledge,
+            heartbeat,
         )
 
         routing = self.config.get("routing", {})

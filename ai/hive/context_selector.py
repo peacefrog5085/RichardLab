@@ -210,6 +210,73 @@ def _select_knowledge(knowledge: dict | None, intent: str) -> dict | None:
     return result
 
 
+def _heartbeat_context(heartbeat, intent: str) -> dict | None:
+    """
+    Convert the heartbeat substrate into compact reasoning context.
+
+    Heartbeat is observational context, not a second reasoning system.
+    Exact volatile measurements and the complete previous snapshot are
+    intentionally excluded. The selector receives only current state,
+    meaningful changes, and attention.
+    """
+    if heartbeat is None:
+        return None
+
+    if hasattr(heartbeat, "as_dict"):
+        raw = heartbeat.as_dict()
+    elif isinstance(heartbeat, dict):
+        raw = deepcopy(heartbeat)
+    else:
+        return None
+
+    snapshot = raw.get("snapshot") or {}
+    changes = raw.get("changes") or []
+
+    compact_changes = []
+    for change in changes:
+        if not isinstance(change, dict):
+            continue
+
+        compact_changes.append(
+            {
+                "category": change.get("category"),
+                "field": change.get("field"),
+                "previous": change.get("previous"),
+                "current": change.get("current"),
+                "severity": change.get("severity", "WATCH"),
+            }
+        )
+
+    context = {
+        "pulse": raw.get("pulse"),
+        "attention": raw.get("attention", "NONE"),
+        "action_required": bool(raw.get("action_required", False)),
+        "reason": raw.get("reason"),
+        "state": {
+            "git": deepcopy(snapshot.get("git")),
+            "projects": snapshot.get("projects"),
+            "ready_projects": snapshot.get("ready_projects"),
+            "experiments": snapshot.get("experiments"),
+            "experiment_families": snapshot.get("experiment_families"),
+            "latest_experiment": snapshot.get("latest_experiment"),
+            "latest_report": snapshot.get("latest_report"),
+            "knowledge_records": snapshot.get("knowledge_records"),
+            "modules": deepcopy(snapshot.get("modules")),
+        },
+        "changes": compact_changes,
+    }
+
+    # Heartbeat is primary for general current-state questions and
+    # supporting context for experiment-specific reasoning.
+    context["relevance"] = (
+        "primary"
+        if intent == "about"
+        else "supporting"
+    )
+
+    return context
+
+
 def _serialized_size(value) -> int:
     """Return deterministic JSON character size."""
     import json
@@ -336,6 +403,7 @@ def select_reasoning_context(
     prompt: str,
     evidence,
     knowledge: dict | None = None,
+    heartbeat=None,
     max_chars: int = DEFAULT_MAX_CHARS,
 ) -> dict:
     """
@@ -346,11 +414,12 @@ def select_reasoning_context(
         1. target identity and target source
         2. direct execution evidence
         3. knowledge
-        4. artifacts
-        5. family/similarity metadata
-        6. related outputs
-        7. system metrics
-        8. sibling source
+        4. heartbeat state and meaningful changes
+        5. artifacts
+        6. family/similarity metadata
+        7. related outputs
+        8. system metrics
+        9. sibling source
 
     Rules:
 
@@ -405,6 +474,7 @@ def select_reasoning_context(
         "system_metrics": [],
         "source_files": {},
         "knowledge": None,
+        "heartbeat": None,
         "omissions": {
             "source_files": [],
             "runs": [],
@@ -511,7 +581,27 @@ def select_reasoning_context(
             )
 
     # ------------------------------------------------------------
-    # 4. ARTIFACTS
+    # 4. HEARTBEAT
+    # ------------------------------------------------------------
+
+    selected_heartbeat = _heartbeat_context(
+        heartbeat,
+        intent,
+    )
+
+    if selected_heartbeat is not None:
+        if not _add_if_fits(
+            packet,
+            "heartbeat",
+            selected_heartbeat,
+            max_chars,
+        ):
+            packet["omissions"]["sections"].append(
+                "heartbeat"
+            )
+
+    # ------------------------------------------------------------
+    # 5. ARTIFACTS
     # ------------------------------------------------------------
 
     deduped_artifacts = _dedupe_artifacts(
