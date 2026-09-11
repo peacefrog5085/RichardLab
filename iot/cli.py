@@ -79,11 +79,22 @@ def main(argv=None):
         print("========================")
 
         for device in devices:
+            changes = {
+                "changed": bool(device.changes),
+                "changes": device.changes,
+            }
+
             print()
             print(device.ip)
 
             if device.hostname:
                 print(f"  hostname : {device.hostname}")
+
+            if device.mac:
+                print(f"  mac      : {device.mac}")
+
+            if device.vendor:
+                print(f"  vendor   : {device.vendor}")
 
             print(
                 "  ports    : "
@@ -111,6 +122,14 @@ def main(argv=None):
             print(
                 f"  confidence: {device.confidence:.2f}"
             )
+
+            if changes["changed"]:
+                print(
+                    "  change   : "
+                    + ", ".join(changes["changes"])
+                )
+            else:
+                print("  change   : no_change")
 
         print()
         print(f"Devices discovered: {len(devices)}")

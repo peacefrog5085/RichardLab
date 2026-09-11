@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from html.parser import HTMLParser
-from urllib.request import Request, urlopen
+import ssl
 from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
 
 @dataclass
@@ -52,24 +53,48 @@ def probe_http(
     ip: str,
     port: int = 80,
     timeout: float = 2.0,
+    scheme: str = "http",
 ) -> HTTPProbeResult:
-    url = f"http://{ip}:{port}/"
+    """
+    Perform a read-only HTTP or HTTPS GET against a service.
+
+    HTTPS certificate verification is disabled because local appliances
+    frequently use self-signed certificates. This does not authenticate,
+    modify, or exploit the device.
+    """
+    if scheme not in {"http", "https"}:
+        raise ValueError("scheme must be 'http' or 'https'")
+
+    url = f"{scheme}://{ip}:{port}/"
 
     request = Request(
         url,
-        headers={
-            "User-Agent": "RichardLab-IoT-Probe/1.0",
-        },
+        headers={"User-Agent": "RichardLab-IoT-Probe/1.0"},
         method="GET",
     )
 
+    context = None
+
+    if scheme == "https":
+        context = ssl._create_unverified_context()
+
     try:
-        with urlopen(request, timeout=timeout) as response:
+        kwargs = {
+            "timeout": timeout,
+        }
+
+        if context is not None:
+            kwargs["context"] = context
+
+        with urlopen(request, **kwargs) as response:
             body = response.read(65536)
 
             parser = _TitleParser()
+
             try:
-                parser.feed(body.decode("utf-8", errors="replace"))
+                parser.feed(
+                    body.decode("utf-8", errors="replace")
+                )
             except Exception:
                 pass
 

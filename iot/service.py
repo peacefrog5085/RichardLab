@@ -9,7 +9,7 @@ class IoTService:
     High-level IoT discovery workflow.
 
     Performs discovery, read-only protocol probing, deterministic
-    fingerprinting, and inventory recording.
+    fingerprinting, change detection, and inventory recording.
     """
 
     def __init__(self, inventory_path="data/iot_inventory.json"):
@@ -40,8 +40,11 @@ class IoTService:
             # Then interpret ALL collected evidence.
             device = fingerprint(device)
 
-            # Finally persist the complete observation.
-            self.inventory.record(device)
+            # Compare against the previous inventory state and persist
+            # the current observation.
+            change_report = self.inventory.record_with_changes(device)
+
+            device.changes = change_report["changes"]
 
             results.append(device)
 

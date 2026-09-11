@@ -1,12 +1,10 @@
 from typing import Optional
 
 
-# Small deterministic seed database.
+# Deterministic OUI database.
 # This is intentionally kept separate from device evidence so the
 # vendor result remains an inference rather than an observed fact.
-OUI_DATABASE = {
-    "e4:6c:d1": "Unknown",
-}
+OUI_DATABASE = {}
 
 
 def normalize_mac(mac: str) -> str:

@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 
+from iot.change_detection import compare_devices
 from iot.models import DeviceObservation
 
 
@@ -37,6 +38,29 @@ class DeviceInventory:
 
         devices.append(record)
         self.save(devices)
+
+    def record_with_changes(self, device: DeviceObservation) -> dict:
+        """
+        Compare the current observation with the stored observation,
+        then persist the current observation.
+
+        Returns a deterministic change report.
+        """
+        devices = self.load()
+        record = device.to_dict()
+
+        previous = None
+
+        for existing in devices:
+            if existing.get("ip") == device.ip:
+                previous = existing
+                break
+
+        changes = compare_devices(previous, record)
+
+        self.record(device)
+
+        return changes.to_dict()
 
     def get(self, ip: str) -> dict | None:
         for device in self.load():

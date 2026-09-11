@@ -14,6 +14,7 @@ class DeviceObservation:
     protocols: list[str] = field(default_factory=list)
     observations: list[str] = field(default_factory=list)
     http_evidence: list[dict] = field(default_factory=list)
+    changes: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return {
@@ -27,4 +28,5 @@ class DeviceObservation:
             "protocols": sorted(self.protocols),
             "observations": list(self.observations),
             "http_evidence": list(self.http_evidence),
+            "changes": list(self.changes),
         }
