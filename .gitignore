@@ -53,3 +53,11 @@ music_lab/*.json
 
 # Music Lab local parser recovery copy
 music_lab/*_backup.py
+
+# Local timestamped recovery snapshots using underscore naming
+*.before_*
+
+# Tracked RichardLab OUI documentation
+/data/*
+!/data/oui/
+!/data/oui/README.md

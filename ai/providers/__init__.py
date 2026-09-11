@@ -3,6 +3,7 @@ from .ollama import OllamaProvider
 from .codex import CodexProvider
 from .gemini import GeminiProvider
 from .openai import OpenAIProvider
+from .grok import GrokProvider
 
 __all__ = [
     "AIProvider",
@@ -11,4 +12,5 @@ __all__ = [
     "CodexProvider",
     "GeminiProvider",
     "OpenAIProvider",
+    "GrokProvider",
 ]

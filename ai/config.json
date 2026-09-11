@@ -23,6 +23,12 @@
     "codex": {
       "command": "codex",
       "timeout_seconds": 300
+    },
+    "grok": {
+      "model": "grok-4.6",
+      "base_url": "https://api.x.ai/v1",
+      "api_key_env": "XAI_API_KEY",
+      "timeout_seconds": 120
     }
   }
 }
