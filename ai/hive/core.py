@@ -13,6 +13,7 @@ from ..workers import WorkerRegistry, WorkerPolicy
 from ..workers.gemini import GeminiWorker
 from ..workers.ollama import OllamaWorker
 from ..workers.codex import CodexWorker
+from ..workers.openai import OpenAIWorker
 from knowledge.knowledge import consult
 
 
@@ -56,6 +57,7 @@ class HiveCore:
             GeminiWorker(self.config, self.provider_factory),
             OllamaWorker(self.config, self.provider_factory),
             CodexWorker(self.config, self.provider_factory),
+            OpenAIWorker(self.config, self.provider_factory),
         )
 
         for worker in workers:

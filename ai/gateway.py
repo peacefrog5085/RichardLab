@@ -8,6 +8,7 @@ from .providers import (
     CodexProvider,
     GeminiProvider,
     OllamaProvider,
+    OpenAIProvider,
 )
 from .router import AIRouter
 from .hive.core import HiveCore
@@ -37,6 +38,8 @@ def build_provider(name, config):
     if name == "ollama":
         return OllamaProvider(provider_config)
 
+    if name == "openai":
+        return OpenAIProvider(provider_config)
     raise ValueError(
         f"Unknown AI provider: {name}"
     )

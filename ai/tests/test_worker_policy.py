@@ -4,6 +4,7 @@ from ai.workers.base import Worker
 from ai.workers.codex import CodexWorker
 from ai.workers.gemini import GeminiWorker
 from ai.workers.ollama import OllamaWorker
+from ai.workers.openai import OpenAIWorker
 
 
 def provider_factory(name, cfg):
@@ -17,6 +18,7 @@ def build_real_registry(config):
         GeminiWorker(config, provider_factory),
         OllamaWorker(config, provider_factory),
         CodexWorker(config, provider_factory),
+        OpenAIWorker(config, provider_factory),
     ):
         registry.register(worker)
 
@@ -30,7 +32,7 @@ def test_reasoning_uses_configured_primary():
 
     decision = policy.select("reasoning")
 
-    assert decision.candidates == ("gemini", "ollama")
+    assert decision.candidates == ("gemini", "ollama", "openai")
     assert decision.selected == "gemini"
     assert decision.policy == "routing_primary"
 
@@ -112,3 +114,19 @@ def test_policy_does_not_execute_workers():
     assert decision.selected == "fake-a"
     assert worker_a.executed is False
     assert worker_b.executed is False
+
+
+def test_openai_worker_is_registered_and_ready():
+    config = load_config()
+    registry = build_real_registry(config)
+
+    worker = registry.get("openai")
+
+    assert worker is not None
+    assert worker.name == "openai"
+
+    health = worker.health()
+
+    assert health["provider"] == "openai"
+    assert health["status"] == "READY"
+    assert health["model"] == "gpt-5.6-luna"
