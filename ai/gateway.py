@@ -56,19 +56,83 @@ def build_router(config, provider_factory):
     )
 
 
+def _print_council_result(result):
+    print("RichardLab AI Council")
+    print("=====================")
+    print()
+    print("QUESTION")
+    print("--------")
+    print(result.question)
+    print()
+
+    print("INDEPENDENT AGENTS")
+    print("-------------------")
+
+    for response in result.debate.responses:
+        print()
+        print(f"[{response.role.upper()}]")
+        print(f"Worker: {response.worker}")
+
+        if response.error:
+            print(f"ERROR: {response.error}")
+        elif isinstance(response.result, (dict, list)):
+            print(json.dumps(response.result, indent=2, default=str))
+        else:
+            print(response.result)
+
+    print()
+
+    print("AUDITOR")
+    print("-------")
+
+    if result.audit is None:
+        print("No audit available.")
+    else:
+        print(json.dumps(result.audit.as_dict(), indent=2, default=str))
+
+    print()
+
+    print("SYNTHESIS")
+    print("---------")
+
+    if result.synthesis is None:
+        print("No synthesis available.")
+    elif isinstance(result.synthesis, (dict, list)):
+        print(json.dumps(result.synthesis, indent=2, default=str))
+    else:
+        print(result.synthesis)
+
+    print()
+
+
 def main():
     if len(sys.argv) < 2:
         print(
-            "Usage: python -m ai.gateway "
-            "\"your question\""
+            "Usage:"
+        )
+        print(
+            "  python -m ai.gateway \"your question\""
+        )
+        print(
+            "  python -m ai.gateway council \"your question\""
         )
         sys.exit(1)
 
-    user_prompt = " ".join(sys.argv[1:])
-    config = load_config()
+    council_mode = sys.argv[1].lower() == "council"
 
-    print("RichardLab AI Gateway")
-    print("=====================")
+    if council_mode:
+        if len(sys.argv) < 3:
+            print(
+                "Usage: python -m ai.gateway council "
+                "\"your question\""
+            )
+            sys.exit(1)
+
+        user_prompt = " ".join(sys.argv[2:])
+    else:
+        user_prompt = " ".join(sys.argv[1:])
+
+    config = load_config()
 
     try:
         hive = HiveCore(
@@ -76,6 +140,14 @@ def main():
             provider_factory=build_provider,
             router_factory=build_router,
         )
+
+        if council_mode:
+            result = hive.dispatch_council(user_prompt)
+            _print_council_result(result)
+            return
+
+        print("RichardLab AI Gateway")
+        print("=====================")
 
         result = hive.dispatch(user_prompt)
 

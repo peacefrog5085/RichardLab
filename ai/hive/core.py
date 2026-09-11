@@ -15,6 +15,7 @@ from ..workers.ollama import OllamaWorker
 from ..workers.codex import CodexWorker
 from ..workers.openai import OpenAIWorker
 from knowledge.knowledge import consult
+from .council import Council
 
 
 @dataclass
@@ -51,6 +52,7 @@ class HiveCore:
         )
 
         self._ensure_registry()
+        self.council = self._build_council()
 
     def _register_workers(self):
         workers = (
@@ -62,6 +64,55 @@ class HiveCore:
 
         for worker in workers:
             self.worker_registry.register(worker)
+
+    def _build_council(self) -> Council:
+        """Build the multi-agent Council from registered Hive workers."""
+        from .debate import DEFAULT_ROLES
+
+        agents = {}
+
+        for role in DEFAULT_ROLES:
+            worker_name = self._council_worker_name(role.name)
+            worker = self.worker_registry.get(worker_name)
+            agents[role.name] = (role, worker)
+
+        auditor = self.worker_registry.get(
+            self._council_worker_name("auditor")
+        )
+        synthesizer = self.worker_registry.get(
+            self._council_worker_name("synthesizer")
+        )
+
+        return Council(
+            agents=agents,
+            auditor=auditor,
+            synthesizer=synthesizer,
+        )
+
+    def _council_worker_name(self, role: str) -> str:
+        """Resolve a configured worker for a Council role."""
+        council_config = self.config.get("council", {})
+        role_config = council_config.get(role)
+
+        if isinstance(role_config, dict):
+            worker_name = role_config.get("worker")
+        else:
+            worker_name = role_config
+
+        if worker_name:
+            return worker_name
+
+        routing = self.config.get("routing", {})
+        primary = routing.get("primary")
+
+        if primary in self.worker_registry.names():
+            return primary
+
+        names = self.worker_registry.names()
+        if not names:
+            raise RuntimeError("No workers are registered for the Council")
+
+        return names[0]
 
     def worker_info(self) -> list[dict[str, Any]]:
         """Return the currently registered Hive workers."""
@@ -268,6 +319,13 @@ SELECTED RICHARDLAB EVIDENCE:
         raise RuntimeError(
             f"No deterministic worker registered for route: {route}"
         )
+
+    def dispatch_council(self, prompt: str):
+        """Run the RichardLab multi-agent Council explicitly."""
+        if not isinstance(prompt, str) or not prompt.strip():
+            raise ValueError("Council prompt must be a non-empty string")
+
+        return self.council.deliberate(prompt.strip())
 
     def dispatch_reasoning(self, prompt, route="ai_reasoning"):
         capability = capability_for_route(route)
