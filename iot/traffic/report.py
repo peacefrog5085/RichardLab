@@ -23,19 +23,37 @@ class TrafficReport:
         }
 
 
+def _inventory_ip(device) -> str | None:
+    """
+    Extract an IP address from either a DeviceObservation or
+    the dictionary representation used by DeviceInventory.
+    """
+    if isinstance(device, DeviceObservation):
+        return device.ip
+
+    if isinstance(device, dict):
+        ip = device.get("ip")
+        return str(ip) if ip else None
+
+    return None
+
+
 def build_traffic_report(
     flows: list[TrafficFlow],
     interface: str,
     duration_seconds: int,
     local_network: str,
-    inventory: list[DeviceObservation] | None = None,
+    inventory=None,
 ) -> TrafficReport:
     inventory = inventory or []
 
-    known_devices = {
-        device.ip: device
-        for device in inventory
-    }
+    known_devices = {}
+
+    for device in inventory:
+        ip = _inventory_ip(device)
+
+        if ip:
+            known_devices[ip] = device
 
     report_flows = []
     lan_count = 0
@@ -59,24 +77,33 @@ def build_traffic_report(
         observed_ips.add(flow.source_ip)
         observed_ips.add(flow.destination_ip)
 
-        if source_class == "LOOPBACK" or destination_class == "LOOPBACK":
+        if (
+            source_class == "LOOPBACK"
+            or destination_class == "LOOPBACK"
+        ):
             localhost_count += 1
 
         if (
             source_class == "LOCAL_NETWORK"
-            or destination_class == "LOCAL_NETWORK"
+            and destination_class == "LOCAL_NETWORK"
         ):
             lan_count += 1
 
         if (
             source_class == "PRIVATE_NETWORK"
-            or destination_class == "PRIVATE_NETWORK"
+            and destination_class == "PRIVATE_NETWORK"
         ):
             private_count += 1
 
         if (
-            source_class == "PUBLIC_INTERNET"
-            or destination_class == "PUBLIC_INTERNET"
+            (
+                source_class == "LOCAL_NETWORK"
+                and destination_class == "PUBLIC_INTERNET"
+            )
+            or (
+                source_class == "PUBLIC_INTERNET"
+                and destination_class == "LOCAL_NETWORK"
+            )
         ):
             internet_count += 1
 
@@ -91,21 +118,25 @@ def build_traffic_report(
                 **flow.to_dict(),
                 "source_class": source_class,
                 "destination_class": destination_class,
-                "source_known_device": flow.source_ip in known_devices,
-                "destination_known_device": flow.destination_ip in known_devices,
+                "source_known_device": (
+                    flow.source_ip in known_devices
+                ),
+                "destination_known_device": (
+                    flow.destination_ip in known_devices
+                ),
             }
         )
 
     inventory_notes = []
 
-    for device in inventory:
-        if device.ip in observed_ips:
+    for ip in sorted(known_devices):
+        if ip in observed_ips:
             inventory_notes.append(
-                f"{device.ip}: traffic observed during capture window"
+                f"{ip}: traffic observed during capture window"
             )
         else:
             inventory_notes.append(
-                f"{device.ip}: no traffic observed during capture window"
+                f"{ip}: no traffic observed during capture window"
             )
 
     summary = {

@@ -107,3 +107,83 @@ def test_report_serializes():
     assert data["duration_seconds"] == 1
     assert data["summary"]["localhost_flows"] == 1
     assert len(data["flows"]) == 1
+
+
+def test_report_correlates_dictionary_inventory():
+    observer = TrafficObserver()
+
+    observer.record(
+        source_ip="192.168.1.165",
+        destination_ip="192.168.1.226",
+        protocol="TCP",
+        source_port=40000,
+        destination_port=8443,
+        packet_length=500,
+    )
+
+    inventory = [
+        {
+            "ip": "192.168.1.226",
+            "mac": "78:80:38:68:1a:a0",
+        }
+    ]
+
+    report = build_traffic_report(
+        flows=observer.snapshot(),
+        interface="wlp0s20f3",
+        duration_seconds=10,
+        local_network="192.168.1.0/24",
+        inventory=inventory,
+    )
+
+    assert report.summary["lan_flows"] == 1
+    assert report.flows[0]["destination_known_device"] is True
+    assert report.inventory_notes == [
+        "192.168.1.226: traffic observed during capture window"
+    ]
+
+
+def test_internet_flow_is_not_counted_as_lan():
+    observer = TrafficObserver()
+
+    observer.record(
+        source_ip="192.168.1.165",
+        destination_ip="104.18.32.47",
+        protocol="TCP",
+        source_port=54742,
+        destination_port=443,
+        packet_length=1000,
+    )
+
+    report = build_traffic_report(
+        flows=observer.snapshot(),
+        interface="wlp0s20f3",
+        duration_seconds=10,
+        local_network="192.168.1.0/24",
+    )
+
+    assert report.summary["lan_flows"] == 0
+    assert report.summary["internet_flows"] == 1
+
+
+def test_lan_flow_is_counted_as_lan():
+    observer = TrafficObserver()
+
+    observer.record(
+        source_ip="192.168.1.165",
+        destination_ip="192.168.1.226",
+        protocol="TCP",
+        source_port=40000,
+        destination_port=8443,
+        packet_length=500,
+    )
+
+    report = build_traffic_report(
+        flows=observer.snapshot(),
+        interface="wlp0s20f3",
+        duration_seconds=10,
+        local_network="192.168.1.0/24",
+    )
+
+    assert report.summary["lan_flows"] == 1
+    assert report.summary["internet_flows"] == 0
