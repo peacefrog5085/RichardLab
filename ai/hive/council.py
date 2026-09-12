@@ -84,6 +84,18 @@ class Council:
         self.auditor = auditor
         self.synthesizer = synthesizer
 
+    def without_role(self, role: str) -> "Council":
+        """Return a Council with one debate role removed for ablation tests."""
+        if role not in self.debate.agents:
+            raise ValueError(f"Unknown Council role: {role}")
+        agents = dict(self.debate.agents)
+        del agents[role]
+        return Council(
+            agents=agents,
+            auditor=self.auditor,
+            synthesizer=self.synthesizer,
+        )
+
     def deliberate(self, question: str) -> CouncilResult:
         trace = CouncilTrace(question)
         debate = self.debate.run(question, trace=trace)
@@ -131,6 +143,9 @@ class Council:
                 worker=self.auditor,
                 result=result,
                 input_value=prompt,
+                parent_trace_ids=tuple(
+                    trace_item["trace_id"] for trace_item in debate.traces
+                ),
             )
         except Exception as exc:
             audit_trace = trace.finish(
@@ -140,6 +155,9 @@ class Council:
                 worker=self.auditor,
                 error=f"{type(exc).__name__}: {exc}",
                 input_value=prompt,
+                parent_trace_ids=tuple(
+                    trace_item["trace_id"] for trace_item in debate.traces
+                ),
             )
             return AuditResult(
                 question=question,
@@ -194,6 +212,7 @@ class Council:
                 worker=self.synthesizer,
                 error=f"{type(exc).__name__}: {exc}",
                 input_value=prompt,
+                parent_trace_ids=self._synthesis_parent_trace_ids(debate, audit),
             )
             raise
 
@@ -204,8 +223,20 @@ class Council:
             worker=self.synthesizer,
             result=result,
             input_value=prompt,
+            parent_trace_ids=self._synthesis_parent_trace_ids(debate, audit),
         )
         return self._result_text(result)
+
+    @staticmethod
+    def _synthesis_parent_trace_ids(
+        debate: DebateResult, audit: AuditResult | None
+    ) -> tuple[str, ...]:
+        parent_ids = [trace_item["trace_id"] for trace_item in debate.traces]
+        if audit is not None and audit.trace is not None:
+            audit_id = audit.trace.get("trace_id")
+            if audit_id:
+                parent_ids.append(audit_id)
+        return tuple(parent_ids)
 
     @staticmethod
     def _result_text(result: Any) -> Any:

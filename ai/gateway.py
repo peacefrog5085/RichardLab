@@ -13,6 +13,7 @@ from .providers import (
 )
 from .router import AIRouter
 from .hive.core import HiveCore
+from .hive.ablation import CouncilAblation
 
 
 AI_DIR = Path(__file__).resolve().parent
@@ -125,15 +126,20 @@ def main():
         print(
             "  python -m ai.gateway council \"your question\""
         )
+        print(
+            "  python -m ai.gateway council-ablation \"your question\""
+        )
         sys.exit(1)
 
-    council_mode = sys.argv[1].lower() == "council"
+    mode = sys.argv[1].lower()
+    council_mode = mode == "council"
+    ablation_mode = mode == "council-ablation"
 
-    if council_mode:
+    if council_mode or ablation_mode:
         if len(sys.argv) < 3:
             print(
-                "Usage: python -m ai.gateway council "
-                "\"your question\""
+                "Usage: python -m ai.gateway "
+                f"{mode} \"your question\""
             )
             sys.exit(1)
 
@@ -153,6 +159,17 @@ def main():
         if council_mode:
             result = hive.dispatch_council(user_prompt)
             _print_council_result(result)
+            return
+
+        if ablation_mode:
+            report = CouncilAblation(hive.council).run(user_prompt)
+            print("RichardLab Council Ablation")
+            print("===========================")
+            print(json.dumps(report.as_dict(), indent=2, default=str))
+            print()
+            for role in ("observer", "explorer", "contrarian"):
+                changed = report.changed_after_removal(role)
+                print(f"Remove {role}: output changed = {changed}")
             return
 
         print("RichardLab AI Gateway")

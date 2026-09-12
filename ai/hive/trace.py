@@ -35,6 +35,7 @@ class ExecutionTrace:
     response_id: str | None
     input_sha256: str
     error: str | None = None
+    parent_trace_ids: tuple[str, ...] = ()
 
     def as_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -61,6 +62,7 @@ class CouncilTrace:
         result: Any = None,
         error: Exception | str | None = None,
         input_value: Any = "",
+        parent_trace_ids: tuple[str, ...] = (),
     ) -> ExecutionTrace:
         end_time = utc_now()
         provider = getattr(result, "provider", None)
@@ -89,6 +91,7 @@ class CouncilTrace:
             response_id=response_id,
             input_sha256=text_hash(input_value),
             error=None if error is None else str(error),
+            parent_trace_ids=parent_trace_ids,
         )
         self.records.append(record)
         return record
