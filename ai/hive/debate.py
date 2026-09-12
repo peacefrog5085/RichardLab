@@ -4,6 +4,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from typing import Any
 
+from .trace import CouncilTrace
+
 
 @dataclass(frozen=True)
 class AgentRole:
@@ -23,6 +25,8 @@ class AgentResponse:
 class DebateResult:
     question: str
     responses: tuple[AgentResponse, ...]
+    batch_id: str | None = None
+    traces: tuple[dict[str, Any], ...] = ()
 
     def successful(self) -> tuple[AgentResponse, ...]:
         return tuple(
@@ -41,6 +45,8 @@ class DebateResult:
     def as_dict(self) -> dict[str, Any]:
         return {
             "question": self.question,
+            "batch_id": self.batch_id,
+            "traces": list(self.traces),
             "responses": [
                 {
                     "role": response.role,
@@ -97,6 +103,7 @@ class DebateEngine:
         role: AgentRole,
         worker: Any,
         question: str,
+        trace: CouncilTrace,
     ) -> AgentResponse:
         prompt = (
             "RICHARDLAB AGENT ROLE\n"
@@ -108,6 +115,7 @@ class DebateEngine:
             "Do not pretend certainty where evidence is missing."
         )
 
+        start_time = trace.start()
         try:
             result = worker.execute(
                 prompt,
@@ -116,12 +124,28 @@ class DebateEngine:
                     "RichardLab. Perform only your assigned role."
                 ),
             )
+            trace.finish(
+                start_time=start_time,
+                stage="debate",
+                role=role.name,
+                worker=worker,
+                result=result,
+                input_value=prompt,
+            )
             return AgentResponse(
                 role=role.name,
                 worker=worker.name,
                 result=result,
             )
         except Exception as exc:
+            trace.finish(
+                start_time=start_time,
+                stage="debate",
+                role=role.name,
+                worker=worker,
+                error=f"{type(exc).__name__}: {exc}",
+                input_value=prompt,
+            )
             return AgentResponse(
                 role=role.name,
                 worker=getattr(worker, "name", type(worker).__name__),
@@ -129,8 +153,9 @@ class DebateEngine:
                 error=f"{type(exc).__name__}: {exc}",
             )
 
-    def run(self, question: str) -> DebateResult:
+    def run(self, question: str, trace: CouncilTrace | None = None) -> DebateResult:
         responses: list[AgentResponse] = []
+        trace = trace or CouncilTrace(question)
 
         with ThreadPoolExecutor(
             max_workers=max(1, len(self.agents))
@@ -141,6 +166,7 @@ class DebateEngine:
                     role,
                     worker,
                     question,
+                    trace,
                 ): role.name
                 for role, worker in self.agents.values()
             }
@@ -153,4 +179,10 @@ class DebateEngine:
         return DebateResult(
             question=question,
             responses=tuple(responses),
+            batch_id=trace.batch_id,
+            traces=tuple(
+                record.as_dict()
+                for record in trace.records
+                if record.stage == "debate"
+            ),
         )

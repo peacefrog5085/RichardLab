@@ -92,6 +92,15 @@ def _print_council_result(result):
 
     print()
 
+    print("EVIDENCE TRACE")
+    print("--------------")
+    if result.evidence_trace is None:
+        print("No execution trace available.")
+    else:
+        print(json.dumps(result.evidence_trace, indent=2, default=str))
+
+    print()
+
     print("SYNTHESIS")
     print("---------")
 

@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from .trace import CouncilTrace
+
 from .debate import (
     AgentResponse,
     AgentRole,
@@ -17,6 +19,7 @@ class AuditResult:
 
     question: str
     responses_reviewed: tuple[AgentResponse, ...]
+    trace: dict[str, Any] | None = None
     agreements: tuple[str, ...] = ()
     contradictions: tuple[str, ...] = ()
     unsupported_claims: tuple[str, ...] = ()
@@ -49,12 +52,14 @@ class CouncilResult:
 
     question: str
     debate: DebateResult
+    evidence_trace: dict[str, Any] | None = None
     audit: AuditResult | None = None
     synthesis: Any = None
 
     def as_dict(self) -> dict[str, Any]:
         return {
             "question": self.question,
+            "evidence_trace": self.evidence_trace,
             "debate": self.debate.as_dict(),
             "audit": self.audit.as_dict() if self.audit else None,
             "synthesis": self.synthesis,
@@ -80,30 +85,35 @@ class Council:
         self.synthesizer = synthesizer
 
     def deliberate(self, question: str) -> CouncilResult:
-        debate = self.debate.run(question)
+        trace = CouncilTrace(question)
+        debate = self.debate.run(question, trace=trace)
 
         audit = None
         if self.auditor is not None:
-            audit = self._audit(question, debate)
+            audit = self._audit(question, debate, trace)
 
         synthesis = None
         if self.synthesizer is not None:
-            synthesis = self._synthesize(question, debate, audit)
+            synthesis = self._synthesize(question, debate, audit, trace)
 
         return CouncilResult(
             question=question,
             debate=debate,
             audit=audit,
             synthesis=synthesis,
+            evidence_trace=trace.as_dict(),
         )
 
     def _audit(
         self,
         question: str,
         debate: DebateResult,
+        trace: CouncilTrace | None = None,
     ) -> AuditResult:
         prompt = self._audit_prompt(question, debate)
 
+        trace = trace or CouncilTrace(question, batch_id=debate.batch_id)
+        start_time = trace.start()
         try:
             result = self.auditor.execute(
                 prompt,
@@ -114,10 +124,27 @@ class Council:
                     "Preserve uncertainty and identify unsupported claims."
                 ),
             )
+            audit_trace = trace.finish(
+                start_time=start_time,
+                stage="audit",
+                role="auditor",
+                worker=self.auditor,
+                result=result,
+                input_value=prompt,
+            )
         except Exception as exc:
+            audit_trace = trace.finish(
+                start_time=start_time,
+                stage="audit",
+                role="auditor",
+                worker=self.auditor,
+                error=f"{type(exc).__name__}: {exc}",
+                input_value=prompt,
+            )
             return AuditResult(
                 question=question,
                 responses_reviewed=debate.responses,
+                trace=audit_trace.as_dict(),
                 unknowns=(
                     f"Auditor execution failed: "
                     f"{type(exc).__name__}: {exc}",
@@ -135,6 +162,7 @@ class Council:
             unsupported_claims=parsed["unsupported_claims"],
             unknowns=parsed["unknowns"],
             evidence_needed=parsed["evidence_needed"],
+            trace=audit_trace.as_dict(),
         )
 
     def _synthesize(
@@ -142,19 +170,41 @@ class Council:
         question: str,
         debate: DebateResult,
         audit: AuditResult | None,
+        trace: CouncilTrace | None = None,
     ) -> Any:
         prompt = self._synthesis_prompt(question, debate, audit)
 
-        result = self.synthesizer.execute(
-            prompt,
-            system=(
-                "You are the RichardLab Synthesizer. "
-                "Produce conclusions proportional to the evidence. "
-                "Do not convert disagreement into certainty. "
-                "Explicitly preserve important unknowns."
-            ),
-        )
+        trace = trace or CouncilTrace(question, batch_id=debate.batch_id)
+        start_time = trace.start()
+        try:
+            result = self.synthesizer.execute(
+                prompt,
+                system=(
+                    "You are the RichardLab Synthesizer. "
+                    "Produce conclusions proportional to the evidence. "
+                    "Do not convert disagreement into certainty. "
+                    "Explicitly preserve important unknowns."
+                ),
+            )
+        except Exception as exc:
+            trace.finish(
+                start_time=start_time,
+                stage="synthesis",
+                role="synthesizer",
+                worker=self.synthesizer,
+                error=f"{type(exc).__name__}: {exc}",
+                input_value=prompt,
+            )
+            raise
 
+        trace.finish(
+            start_time=start_time,
+            stage="synthesis",
+            role="synthesizer",
+            worker=self.synthesizer,
+            result=result,
+            input_value=prompt,
+        )
         return self._result_text(result)
 
     @staticmethod
