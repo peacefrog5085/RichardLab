@@ -284,3 +284,50 @@ def verify(plan: ActionPlan, result: ActionResult) -> ActionResult:
         verified=True,
         evidence=result.evidence,
     )
+
+
+@dataclass(frozen=True)
+class AuthorizationDecision:
+    """Deterministic authorization decision made before execution."""
+
+    status: str
+    action: str
+    reason: str
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "status": self.status,
+            "action": self.action,
+            "reason": self.reason,
+        }
+
+
+_AUTHORIZED_ACTIONS = frozenset(
+    {
+        "none",
+        "inspect_lab_status",
+        "inspect_state_change",
+        "record_observation",
+    }
+)
+
+
+def authorize_plan(plan: ActionPlan) -> AuthorizationDecision:
+    """Authorize only explicitly registered deterministic control actions.
+
+    Authorization is a pure policy decision. It does not execute tools,
+    inspect external state, or mutate RichardLab.
+    """
+
+    if plan.action in _AUTHORIZED_ACTIONS:
+        return AuthorizationDecision(
+            status="AUTHORIZED",
+            action=plan.action,
+            reason=f"Action is explicitly authorized: {plan.action}",
+        )
+
+    return AuthorizationDecision(
+        status="BLOCKED",
+        action=plan.action,
+        reason=f"Action is not authorized: {plan.action}",
+    )
