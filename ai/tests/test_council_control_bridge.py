@@ -231,3 +231,54 @@ def test_control_cycle_preserves_no_action_state():
     assert cycle.decision.decision == "NO_ACTION"
     assert cycle.plan.action == "none"
     assert cycle.result is None
+
+
+def test_council_recommendation_builds_complete_control_cycle():
+    from ai.hive.control import (
+        StateSnapshot,
+        build_control_cycle,
+        council_recommendation_to_decision,
+        extract_council_recommendation,
+    )
+
+    state = StateSnapshot(
+        attention="REVIEW",
+        changes=({"type": "council_detected_change"},),
+        observations={"source": "council"},
+    )
+
+    synthesis = "RECOMMENDATION: REVIEW_STATE_CHANGE"
+
+    recommendation = extract_council_recommendation(synthesis)
+    council_decision = council_recommendation_to_decision(recommendation)
+    cycle = build_control_cycle(state)
+
+    assert council_decision.decision == "REVIEW_STATE_CHANGE"
+    assert cycle.state == state
+    assert cycle.decision.decision == "REVIEW_STATE_CHANGE"
+    assert cycle.plan.action == "inspect_state_change"
+    assert cycle.result is None
+
+
+def test_council_recommendation_cannot_bypass_state_control():
+    from ai.hive.control import (
+        StateSnapshot,
+        build_control_cycle,
+        council_recommendation_to_decision,
+        extract_council_recommendation,
+    )
+
+    state = StateSnapshot(attention="NONE")
+    synthesis = "RECOMMENDATION: REVIEW_STATE_CHANGE"
+
+    recommendation = extract_council_recommendation(synthesis)
+    council_decision = council_recommendation_to_decision(recommendation)
+    cycle = build_control_cycle(state)
+
+    assert council_decision.decision == "REVIEW_STATE_CHANGE"
+
+    # The Council recommendation does not directly replace the
+    # deterministic state-derived control decision.
+    assert cycle.decision.decision == "NO_ACTION"
+    assert cycle.plan.action == "none"
+    assert cycle.result is None
