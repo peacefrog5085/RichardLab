@@ -40,6 +40,45 @@ class Decision:
         }
 
 
+def council_recommendation_to_decision(
+    recommendation: dict[str, Any],
+) -> Decision:
+    """Translate a Council recommendation into a deterministic Control decision."""
+
+    raw_decision = recommendation.get("decision")
+    reason = recommendation.get("reason")
+    capability = recommendation.get("capability")
+
+    if raw_decision == "REVIEW_STATE_CHANGE":
+        return Decision(
+            objective="understand the detected state change",
+            decision=raw_decision,
+            reason=reason or "Council requested review of a state change.",
+            capability=capability,
+        )
+
+    if raw_decision:
+        return Decision(
+            objective="review an unrecognized Council recommendation",
+            decision="REVIEW_STATE_CHANGE",
+            reason=(
+                f"Unknown Council decision '{raw_decision}'; "
+                "deterministic control requires review."
+            ),
+            capability=None,
+        )
+
+    return Decision(
+        objective="review an incomplete Council recommendation",
+        decision="REVIEW_STATE_CHANGE",
+        reason=(
+            "Council recommendation is missing or incomplete; "
+            "deterministic control requires review."
+        ),
+        capability=None,
+    )
+
+
 @dataclass(frozen=True)
 class ActionPlan:
     """Concrete action derived from a Hive decision."""
