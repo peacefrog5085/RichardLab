@@ -2,6 +2,7 @@ from ai.hive.control import (
     ActionPlan,
     ActionResult,
     execute_plan,
+    authorize_plan,
     verify,
 )
 
@@ -29,7 +30,8 @@ def test_none_plan_does_not_execute():
         verification="state_remains_stable",
     )
 
-    result = execute_plan(plan)
+    authorization = authorize_plan(plan)
+    result = execute_plan(plan, authorization=authorization)
 
     assert result.status == "SUCCESS"
     assert result.verified is False
@@ -49,7 +51,8 @@ def test_state_change_plan_uses_existing_heartbeat():
         verification="change_explained",
     )
 
-    result = execute_plan(plan, hive)
+    authorization = authorize_plan(plan)
+    result = execute_plan(plan, hive, authorization=authorization)
 
     assert result.status == "SUCCESS"
     assert hive.calls == 1
@@ -70,7 +73,8 @@ def test_observation_plan_uses_existing_heartbeat():
         verification="observation_recorded",
     )
 
-    result = execute_plan(plan, hive)
+    authorization = authorize_plan(plan)
+    result = execute_plan(plan, hive, authorization=authorization)
 
     assert result.status == "SUCCESS"
     assert hive.calls == 1

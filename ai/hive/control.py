@@ -316,12 +316,38 @@ def build_control_cycle(state: StateSnapshot) -> ControlCycle:
     )
 
 
-def execute_plan(plan: ActionPlan, hive=None) -> ActionResult:
+def execute_plan(
+    plan: ActionPlan,
+    hive=None,
+    authorization: AuthorizationDecision | None = None,
+) -> ActionResult:
     """Execute an authorized deterministic RichardLab control action.
 
     Execution is intentionally narrow and reuses existing RichardLab
     mechanisms. This is not a second router or execution engine.
     """
+
+    if authorization is None:
+        return ActionResult(
+            status="BLOCKED",
+            result="Explicit authorization is required before execution.",
+            verified=False,
+            evidence={
+                "action": plan.action,
+                "reason": "missing_authorization",
+            },
+        )
+
+    if authorization.status != "AUTHORIZED":
+        return ActionResult(
+            status="BLOCKED",
+            result=authorization.reason,
+            verified=False,
+            evidence={
+                "action": plan.action,
+                "reason": authorization.reason,
+            },
+        )
 
     if plan.action == "none":
         return ActionResult(
