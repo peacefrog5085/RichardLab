@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import socket
+import re
 import subprocess
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -53,6 +54,7 @@ class SecurityAudit:
             self._check_config(),
             self._check_network_exposure(),
             self._check_ollama(),
+            self._check_secrets(),
             self._check_git_state(),
         )
 
@@ -211,6 +213,71 @@ class SecurityAudit:
             details={
                 "listeners": ollama,
                 "non_local_listeners": exposed,
+            },
+        )
+
+    def _check_secrets(self) -> SecurityFinding:
+        """Scan project files for common credential patterns.
+
+        This check is read-only and never records matched secret values.
+        """
+
+        patterns = {
+            "google_api_key": re.compile(r"AIza[0-9A-Za-z_-]{20,}"),
+            "openai_api_key": re.compile(r"sk-[A-Za-z0-9_-]{20,}"),
+            "xai_api_key": re.compile(r"xai-[A-Za-z0-9_-]{20,}"),
+            "github_token": re.compile(
+                r"gh[pousr]_[A-Za-z0-9_]{20,}"
+            ),
+            "private_key": re.compile(
+                r"-----BEGIN (?:RSA|OPENSSH|EC|PRIVATE) KEY-----"
+            ),
+        }
+
+        matches: list[dict[str, str]] = []
+
+        for path in self.project_root.rglob("*"):
+            if not path.is_file():
+                continue
+
+            try:
+                relative = path.relative_to(self.project_root)
+            except ValueError:
+                continue
+
+            if any(part in {".git", ".venv", "__pycache__"} for part in relative.parts):
+                continue
+
+            try:
+                content = path.read_text(
+                    encoding="utf-8",
+                    errors="ignore",
+                )
+            except OSError:
+                continue
+
+            for name, pattern in patterns.items():
+                if pattern.search(content):
+                    matches.append(
+                        {
+                            "path": str(relative),
+                            "pattern": name,
+                        }
+                    )
+
+        status = "ACTION_REQUIRED" if matches else "PASS"
+
+        return SecurityFinding(
+            check="secrets",
+            status=status,
+            summary=(
+                "No common credential patterns were detected."
+                if not matches
+                else "Potential credential patterns were detected."
+            ),
+            details={
+                "matches": matches,
+                "match_count": len(matches),
             },
         )
 
