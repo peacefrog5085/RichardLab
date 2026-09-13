@@ -50,3 +50,46 @@ def test_secret_check_detects_credential_without_exposing_value(tmp_path):
     assert finding.details["match_count"] == 1
     assert finding.details["matches"][0]["pattern"] == "openai_api_key"
     assert secret not in str(finding.details)
+
+
+def test_secret_file_policy_passes_when_sensitive_files_are_ignored(tmp_path):
+    gitignore = tmp_path / ".gitignore"
+    gitignore.write_text(
+        ".env\n"
+        ".env.*\n"
+        "credentials.json\n"
+        "secrets.json\n"
+        "*.pem\n"
+        "*.key\n"
+        "*.p12\n"
+        "*.pfx\n",
+        encoding="utf-8",
+    )
+
+    audit = SecurityAudit(tmp_path)
+
+    finding = audit._check_secret_file_policy()
+
+    assert finding.check == "secret_file_policy"
+    assert finding.status == "PASS"
+
+
+def test_secret_file_policy_detects_unprotected_secret_file(tmp_path):
+    gitignore = tmp_path / ".gitignore"
+    gitignore.write_text(".env\n", encoding="utf-8")
+
+    secret_file = tmp_path / "credentials.json"
+    secret_file.write_text('{"api_key": "placeholder"}\n', encoding="utf-8")
+
+    audit = SecurityAudit(tmp_path)
+
+    finding = audit._check_secret_file_policy()
+
+    assert finding.status == "ACTION_REQUIRED"
+    assert finding.details["match_count"] == 1
+    assert finding.details["matches"] == [
+        {
+            "path": "credentials.json",
+            "reason": "sensitive_filename_not_ignored",
+        }
+    ]

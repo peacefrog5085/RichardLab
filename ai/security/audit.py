@@ -55,6 +55,7 @@ class SecurityAudit:
             self._check_network_exposure(),
             self._check_ollama(),
             self._check_secrets(),
+            self._check_secret_file_policy(),
             self._check_git_state(),
         )
 
@@ -274,6 +275,95 @@ class SecurityAudit:
                 "No common credential patterns were detected."
                 if not matches
                 else "Potential credential patterns were detected."
+            ),
+            details={
+                "matches": matches,
+                "match_count": len(matches),
+            },
+        )
+
+    def _check_secret_file_policy(self) -> SecurityFinding:
+        """Check that existing sensitive files are protected by .gitignore.
+
+        This check is read-only and never reads or records secret contents.
+        """
+
+        sensitive_patterns = (
+            ".env",
+            ".env.*",
+            "credentials.json",
+            "secrets.json",
+            "service-account.json",
+            "*.pem",
+            "*.key",
+            "*.p12",
+            "*.pfx",
+        )
+
+        gitignore = self.project_root / ".gitignore"
+
+        try:
+            ignored_rules = {
+                line.strip()
+                for line in gitignore.read_text(
+                    encoding="utf-8",
+                    errors="ignore",
+                ).splitlines()
+                if line.strip() and not line.lstrip().startswith("#")
+            }
+        except OSError:
+            ignored_rules = set()
+
+        def matches_pattern(name: str, pattern: str) -> bool:
+            if pattern.startswith("*."):
+                return name.endswith(pattern[1:])
+            if pattern.endswith(".*"):
+                return name.startswith(pattern[:-1])
+            return name == pattern
+
+        matches = []
+
+        for path in self.project_root.rglob("*"):
+            if not path.is_file():
+                continue
+
+            try:
+                relative = path.relative_to(self.project_root)
+            except ValueError:
+                continue
+
+            if any(
+                part in {".git", ".venv", "__pycache__"}
+                for part in relative.parts
+            ):
+                continue
+
+            if any(
+                matches_pattern(path.name, pattern)
+                for pattern in sensitive_patterns
+            ):
+                protected = any(
+                    matches_pattern(path.name, rule)
+                    for rule in ignored_rules
+                )
+
+                if not protected:
+                    matches.append(
+                        {
+                            "path": str(relative),
+                            "reason": "sensitive_filename_not_ignored",
+                        }
+                    )
+
+        status = "ACTION_REQUIRED" if matches else "PASS"
+
+        return SecurityFinding(
+            check="secret_file_policy",
+            status=status,
+            summary=(
+                "Existing sensitive files are protected by .gitignore."
+                if not matches
+                else "Existing sensitive files are not protected by .gitignore."
             ),
             details={
                 "matches": matches,
