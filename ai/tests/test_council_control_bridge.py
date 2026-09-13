@@ -104,3 +104,54 @@ def test_recommendation_extraction_does_not_execute():
 
     assert recommendation["decision"] == "REVIEW_STATE_CHANGE"
     assert recommendation["capability"] is None
+
+
+
+
+def test_hive_council_result_can_flow_into_control_decision():
+    from types import SimpleNamespace
+
+    from ai.hive.control import (
+        council_recommendation_to_decision,
+        extract_council_recommendation,
+    )
+    from ai.hive.core import HiveCore
+
+    class FakeCouncil:
+        def deliberate(self, question):
+            return SimpleNamespace(
+                question=question,
+                synthesis="RECOMMENDATION: REVIEW_STATE_CHANGE",
+            )
+
+    hive = object.__new__(HiveCore)
+    hive.council = FakeCouncil()
+
+    result = hive.dispatch_council("What changed?")
+
+    recommendation = extract_council_recommendation(result.synthesis)
+    decision = council_recommendation_to_decision(recommendation)
+
+    assert result.question == "What changed?"
+    assert decision.decision == "REVIEW_STATE_CHANGE"
+    assert decision.capability is None
+
+
+def test_hive_council_result_does_not_execute_control_action():
+    from types import SimpleNamespace
+
+    from ai.hive.core import HiveCore
+
+    class FakeCouncil:
+        def deliberate(self, question):
+            return SimpleNamespace(
+                question=question,
+                synthesis="RECOMMENDATION: REVIEW_STATE_CHANGE",
+            )
+
+    hive = object.__new__(HiveCore)
+    hive.council = FakeCouncil()
+
+    result = hive.dispatch_council("Review the state.")
+
+    assert result.synthesis == "RECOMMENDATION: REVIEW_STATE_CHANGE"
