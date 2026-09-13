@@ -93,3 +93,52 @@ def test_secret_file_policy_detects_unprotected_secret_file(tmp_path):
             "reason": "sensitive_filename_not_ignored",
         }
     ]
+
+
+def test_git_history_secret_check_passes_clean_history(tmp_path, monkeypatch):
+    audit = SecurityAudit(tmp_path)
+
+    monkeypatch.setattr(
+        audit,
+        "_git_history_matches",
+        lambda: [],
+    )
+
+    finding = audit._check_git_history_secrets()
+
+    assert finding.check == "git_history_secrets"
+    assert finding.status == "PASS"
+
+
+def test_git_history_secret_check_detects_pattern_without_exposing_value(
+    tmp_path,
+    monkeypatch,
+):
+    secret = "sk-" + "B" * 30
+
+    monkeypatch.setattr(
+        SecurityAudit,
+        "_git_history_matches",
+        lambda self: [
+            {
+                "commit": "abc123",
+                "path": "old-config.txt",
+                "pattern": "openai_api_key",
+            }
+        ],
+    )
+
+    audit = SecurityAudit(tmp_path)
+
+    finding = audit._check_git_history_secrets()
+
+    assert finding.status == "ACTION_REQUIRED"
+    assert finding.details["match_count"] == 1
+    assert finding.details["matches"] == [
+        {
+            "commit": "abc123",
+            "path": "old-config.txt",
+            "pattern": "openai_api_key",
+        }
+    ]
+    assert secret not in str(finding.details)

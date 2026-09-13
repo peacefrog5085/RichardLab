@@ -56,6 +56,7 @@ class SecurityAudit:
             self._check_ollama(),
             self._check_secrets(),
             self._check_secret_file_policy(),
+            self._check_git_history_secrets(),
             self._check_git_state(),
         )
 
@@ -364,6 +365,98 @@ class SecurityAudit:
                 "Existing sensitive files are protected by .gitignore."
                 if not matches
                 else "Existing sensitive files are not protected by .gitignore."
+            ),
+            details={
+                "matches": matches,
+                "match_count": len(matches),
+            },
+        )
+
+    def _git_history_matches(self) -> list[dict[str, str]]:
+        """Search Git history for common credential patterns.
+
+        Results contain only commit, path, and pattern name.
+        Secret values are never returned.
+        """
+
+        patterns = {
+            "google_api_key": re.compile(r"AIza[0-9A-Za-z_-]{20,}"),
+            "openai_api_key": re.compile(r"sk-[A-Za-z0-9_-]{20,}"),
+            "xai_api_key": re.compile(r"xai-[A-Za-z0-9_-]{20,}"),
+            "github_token": re.compile(r"gh[pousr]_[A-Za-z0-9_]{20,}"),
+            "private_key": re.compile(
+                r"-----BEGIN (?:RSA|OPENSSH|EC|PRIVATE) KEY-----"
+            ),
+        }
+
+        try:
+            commits = subprocess.run(
+                ["git", "rev-list", "--all"],
+                cwd=self.project_root,
+                capture_output=True,
+                text=True,
+                check=True,
+            ).stdout.splitlines()
+        except (OSError, subprocess.CalledProcessError):
+            return []
+
+        matches = []
+
+        for commit in commits:
+            try:
+                result = subprocess.run(
+                    [
+                        "git", "grep", "-n", "-I", "-E",
+                        "|".join(pattern.pattern for pattern in patterns.values()),
+                        commit, "--",
+                        ":(exclude).venv",
+                        ":(exclude)**/__pycache__",
+                    ],
+                    cwd=self.project_root,
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+            except OSError:
+                continue
+
+            if result.returncode not in {0, 1}:
+                continue
+
+            for line in result.stdout.splitlines():
+                parts = line.split(":", 3)
+
+                if len(parts) < 4:
+                    continue
+
+                path = parts[1]
+                content = parts[3]
+
+                for name, pattern in patterns.items():
+                    if pattern.search(content):
+                        matches.append(
+                            {
+                                "commit": commit,
+                                "path": path,
+                                "pattern": name,
+                            }
+                        )
+                        break
+
+        return matches
+
+    def _check_git_history_secrets(self) -> SecurityFinding:
+        """Check Git history for common credential patterns."""
+
+        matches = self._git_history_matches()
+
+        return SecurityFinding(
+            check="git_history_secrets",
+            status="ACTION_REQUIRED" if matches else "PASS",
+            summary=(
+                "No common credential patterns were detected in Git history."
+                if not matches
+                else "Potential credential patterns were detected in Git history."
             ),
             details={
                 "matches": matches,
