@@ -316,6 +316,46 @@ def build_control_cycle(state: StateSnapshot) -> ControlCycle:
     )
 
 
+def execute_control_cycle(
+    cycle: ControlCycle,
+    hive=None,
+) -> ControlCycle:
+    """Execute and verify an already-authorized control cycle."""
+
+    if cycle.authorization is None:
+        result = ActionResult(
+            status="BLOCKED",
+            result="Explicit authorization is required before execution.",
+            verified=False,
+            evidence={
+                "action": cycle.plan.action,
+                "reason": "missing_authorization",
+            },
+        )
+        return ControlCycle(
+            state=cycle.state,
+            decision=cycle.decision,
+            plan=cycle.plan,
+            authorization=cycle.authorization,
+            result=result,
+        )
+
+    result = execute_plan(
+        cycle.plan,
+        hive=hive,
+        authorization=cycle.authorization,
+    )
+    verified = verify(cycle.plan, result)
+
+    return ControlCycle(
+        state=cycle.state,
+        decision=cycle.decision,
+        plan=cycle.plan,
+        authorization=cycle.authorization,
+        result=verified,
+    )
+
+
 def execute_plan(
     plan: ActionPlan,
     hive=None,

@@ -224,3 +224,72 @@ def test_execute_plan_requires_explicit_authorization():
 
     assert result.status == "BLOCKED"
     assert result.verified is False
+
+
+def test_control_cycle_can_record_verified_execution_result():
+    from ai.hive.control import (
+        ActionPlan,
+        ActionResult,
+        ControlCycle,
+        Decision,
+        StateSnapshot,
+        authorize_plan,
+        verify,
+    )
+
+    state = StateSnapshot(attention="REVIEW")
+    decision = Decision(
+        objective="understand the detected state change",
+        decision="REVIEW_STATE_CHANGE",
+        reason="A meaningful change requires review.",
+    )
+    plan = ActionPlan(
+        action="inspect_state_change",
+        verification="change_explained",
+    )
+
+    authorization = authorize_plan(plan)
+    result = ActionResult(
+        status="SUCCESS",
+        result={"explained": True},
+        verified=False,
+    )
+    verified = verify(plan, result)
+
+    cycle = ControlCycle(
+        state=state,
+        decision=decision,
+        plan=plan,
+        authorization=authorization,
+        result=verified,
+    )
+
+    assert cycle.authorization.status == "AUTHORIZED"
+    assert cycle.result.status == "SUCCESS"
+    assert cycle.result.verified is True
+
+
+def test_control_cycle_execution_runs_authorized_plan_and_verifies():
+    from ai.hive.control import (
+        StateSnapshot,
+        build_control_cycle,
+        execute_control_cycle,
+    )
+
+    state = StateSnapshot(attention="REVIEW")
+    cycle = build_control_cycle(state)
+
+    class FakeHive:
+        def heartbeat(self):
+            return {
+                "attention": "NONE",
+                "changes": [],
+                "snapshot": {},
+            }
+
+    completed = execute_control_cycle(cycle, hive=FakeHive())
+
+    assert completed.authorization.status == "AUTHORIZED"
+    assert completed.result is not None
+    assert completed.result.status == "SUCCESS"
+    assert completed.result.verified is True
