@@ -45,3 +45,62 @@ def test_missing_council_recommendation_is_review():
     decision = council_recommendation_to_decision({})
 
     assert decision.decision == "REVIEW_STATE_CHANGE"
+
+
+def test_extract_explicit_council_recommendation():
+    from ai.hive.control import extract_council_recommendation
+
+    synthesis = """
+Known facts:
+- The system observed a meaningful state change.
+
+Unknowns:
+- The cause is not yet established.
+
+RECOMMENDATION: REVIEW_STATE_CHANGE
+"""
+
+    recommendation = extract_council_recommendation(synthesis)
+
+    assert recommendation["decision"] == "REVIEW_STATE_CHANGE"
+
+
+def test_synthesis_without_explicit_recommendation_returns_review():
+    from ai.hive.control import extract_council_recommendation
+
+    synthesis = """
+Known facts:
+- Something changed.
+
+Strong inferences:
+- More investigation may be useful.
+"""
+
+    recommendation = extract_council_recommendation(synthesis)
+
+    assert recommendation["decision"] == "REVIEW_STATE_CHANGE"
+    assert "explicit" in recommendation["reason"].lower()
+
+
+def test_unknown_explicit_recommendation_does_not_create_action():
+    from ai.hive.control import extract_council_recommendation
+
+    synthesis = """
+RECOMMENDATION: DELETE_EVERYTHING
+"""
+
+    recommendation = extract_council_recommendation(synthesis)
+
+    assert recommendation["decision"] == "REVIEW_STATE_CHANGE"
+    assert "unknown" in recommendation["reason"].lower()
+
+
+def test_recommendation_extraction_does_not_execute():
+    from ai.hive.control import extract_council_recommendation
+
+    synthesis = "RECOMMENDATION: REVIEW_STATE_CHANGE"
+
+    recommendation = extract_council_recommendation(synthesis)
+
+    assert recommendation["decision"] == "REVIEW_STATE_CHANGE"
+    assert recommendation["capability"] is None

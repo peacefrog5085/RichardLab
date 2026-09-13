@@ -40,6 +40,67 @@ class Decision:
         }
 
 
+
+_COUNCIL_RECOMMENDATIONS = frozenset(
+    {
+        "REVIEW_STATE_CHANGE",
+    }
+)
+
+
+def extract_council_recommendation(
+    synthesis: Any,
+) -> dict[str, Any]:
+    """Extract an explicitly declared recommendation from Council synthesis.
+
+    Ordinary synthesis text is never treated as an instruction. A recommendation
+    must use the explicit ``RECOMMENDATION: <decision>`` marker.
+    """
+
+    if not isinstance(synthesis, str):
+        return {
+            "decision": "REVIEW_STATE_CHANGE",
+            "reason": (
+                "Council synthesis is not text; an explicit recommendation "
+                "is required."
+            ),
+            "capability": None,
+        }
+
+    for line in synthesis.splitlines():
+        stripped = line.strip()
+
+        if not stripped.upper().startswith("RECOMMENDATION:"):
+            continue
+
+        raw_decision = stripped.split(":", 1)[1].strip()
+
+        if raw_decision in _COUNCIL_RECOMMENDATIONS:
+            return {
+                "decision": raw_decision,
+                "reason": "Council explicitly recommended review.",
+                "capability": None,
+            }
+
+        return {
+            "decision": "REVIEW_STATE_CHANGE",
+            "reason": (
+                f"Unknown Council recommendation '{raw_decision}'; "
+                "deterministic control requires review."
+            ),
+            "capability": None,
+        }
+
+    return {
+        "decision": "REVIEW_STATE_CHANGE",
+        "reason": (
+            "No explicit Council recommendation was found; "
+            "deterministic control requires explicit review."
+        ),
+        "capability": None,
+    }
+
+
 def council_recommendation_to_decision(
     recommendation: dict[str, Any],
 ) -> Decision:
