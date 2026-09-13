@@ -99,3 +99,157 @@ def test_executor_does_not_accept_actions_outside_authorization():
 
     assert authorization.status == "BLOCKED"
     assert result.status == "BLOCKED"
+
+
+def test_control_cycle_can_record_authorization_decision():
+    from ai.hive.control import (
+        ActionPlan,
+        ControlCycle,
+        Decision,
+        StateSnapshot,
+        authorize_plan,
+    )
+
+    state = StateSnapshot(attention="REVIEW")
+    decision = Decision(
+        objective="understand the detected state change",
+        decision="REVIEW_STATE_CHANGE",
+        reason="A meaningful change requires review.",
+    )
+    plan = ActionPlan(action="inspect_state_change")
+
+    authorization = authorize_plan(plan)
+
+    cycle = ControlCycle(
+        state=state,
+        decision=decision,
+        plan=plan,
+        authorization=authorization,
+    )
+
+    assert cycle.authorization.status == "AUTHORIZED"
+    assert cycle.result is None
+
+
+def test_blocked_control_cycle_records_blocked_authorization():
+    from ai.hive.control import (
+        ActionPlan,
+        ControlCycle,
+        Decision,
+        StateSnapshot,
+        authorize_plan,
+    )
+
+    state = StateSnapshot(attention="REVIEW")
+    decision = Decision(
+        objective="test blocked action",
+        decision="REVIEW_STATE_CHANGE",
+        reason="Test authorization boundary.",
+    )
+    plan = ActionPlan(action="delete_everything")
+
+    authorization = authorize_plan(plan)
+
+    cycle = ControlCycle(
+        state=state,
+        decision=decision,
+        plan=plan,
+        authorization=authorization,
+    )
+
+    assert cycle.authorization.status == "BLOCKED"
+    assert cycle.result is None
+
+
+def test_build_control_cycle_records_authorization():
+    from ai.hive.control import (
+        StateSnapshot,
+        build_control_cycle,
+    )
+
+    state = StateSnapshot(attention="REVIEW")
+
+    cycle = build_control_cycle(state)
+
+    assert cycle.authorization is not None
+    assert cycle.authorization.status == "AUTHORIZED"
+    assert cycle.authorization.action == "inspect_state_change"
+    assert cycle.result is None
+
+
+def test_build_control_cycle_records_blocked_authorization_for_unsupported_plan():
+    from ai.hive.control import (
+        ActionPlan,
+        ControlCycle,
+        Decision,
+        StateSnapshot,
+        authorize_plan,
+    )
+
+    state = StateSnapshot(attention="REVIEW")
+    decision = Decision(
+        objective="test blocked action",
+        decision="REVIEW_STATE_CHANGE",
+        reason="Test authorization boundary.",
+    )
+    plan = ActionPlan(action="delete_everything")
+
+    authorization = authorize_plan(plan)
+
+    cycle = ControlCycle(
+        state=state,
+        decision=decision,
+        plan=plan,
+        authorization=authorization,
+    )
+
+    assert cycle.authorization.status == "BLOCKED"
+    assert cycle.authorization.action == "delete_everything"
+    assert cycle.result is None
+
+
+def test_build_control_cycle_records_authorization():
+    from ai.hive.control import (
+        StateSnapshot,
+        build_control_cycle,
+    )
+
+    state = StateSnapshot(attention="REVIEW")
+
+    cycle = build_control_cycle(state)
+
+    assert cycle.authorization is not None
+    assert cycle.authorization.status == "AUTHORIZED"
+    assert cycle.authorization.action == "inspect_state_change"
+    assert cycle.result is None
+
+
+def test_build_control_cycle_records_blocked_authorization_for_unsupported_plan():
+    from ai.hive.control import (
+        ActionPlan,
+        ControlCycle,
+        Decision,
+        StateSnapshot,
+        authorize_plan,
+    )
+
+    state = StateSnapshot(attention="REVIEW")
+    decision = Decision(
+        objective="test blocked action",
+        decision="REVIEW_STATE_CHANGE",
+        reason="Test authorization boundary.",
+    )
+    plan = ActionPlan(action="delete_everything")
+
+    authorization = authorize_plan(plan)
+
+    cycle = ControlCycle(
+        state=state,
+        decision=decision,
+        plan=plan,
+        authorization=authorization,
+    )
+
+    assert cycle.authorization.status == "BLOCKED"
+    assert cycle.authorization.action == "delete_everything"
+    assert cycle.result is None

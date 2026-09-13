@@ -180,11 +180,12 @@ class ActionResult:
 
 @dataclass(frozen=True)
 class ControlCycle:
-    """Complete State → Decision → Action → Verification record."""
+    """Complete State → Decision → Action → Authorization → Verification record."""
 
     state: StateSnapshot
     decision: Decision
     plan: ActionPlan
+    authorization: "AuthorizationDecision | None" = None
     result: ActionResult | None = None
 
     def as_dict(self) -> dict[str, Any]:
@@ -192,6 +193,11 @@ class ControlCycle:
             "state": self.state.as_dict(),
             "decision": self.decision.as_dict(),
             "plan": self.plan.as_dict(),
+            "authorization": (
+                self.authorization.as_dict()
+                if self.authorization is not None
+                else None
+            ),
             "result": (
                 self.result.as_dict()
                 if self.result is not None
@@ -299,11 +305,13 @@ def build_control_cycle(state: StateSnapshot) -> ControlCycle:
 
     decision = decide(state)
     plan = plan_for(decision)
+    authorization = authorize_plan(plan)
 
     return ControlCycle(
         state=state,
         decision=decision,
         plan=plan,
+        authorization=authorization,
         result=None,
     )
 
