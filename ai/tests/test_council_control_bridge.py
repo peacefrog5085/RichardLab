@@ -155,3 +155,42 @@ def test_hive_council_result_does_not_execute_control_action():
     result = hive.dispatch_council("Review the state.")
 
     assert result.synthesis == "RECOMMENDATION: REVIEW_STATE_CHANGE"
+
+
+def test_council_recommendation_reaches_action_plan():
+    from ai.hive.control import (
+        council_recommendation_to_decision,
+        extract_council_recommendation,
+        plan_for,
+    )
+
+    synthesis = "RECOMMENDATION: REVIEW_STATE_CHANGE"
+
+    recommendation = extract_council_recommendation(synthesis)
+    decision = council_recommendation_to_decision(recommendation)
+    plan = plan_for(decision)
+
+    assert decision.decision == "REVIEW_STATE_CHANGE"
+    assert plan.action == "inspect_state_change"
+    assert plan.verification == "change_explained"
+
+
+def test_council_recommendation_pipeline_does_not_execute():
+    from ai.hive.control import (
+        council_recommendation_to_decision,
+        execute_plan,
+        extract_council_recommendation,
+        plan_for,
+    )
+
+    synthesis = "RECOMMENDATION: REVIEW_STATE_CHANGE"
+
+    recommendation = extract_council_recommendation(synthesis)
+    decision = council_recommendation_to_decision(recommendation)
+    plan = plan_for(decision)
+
+    assert plan.action == "inspect_state_change"
+
+    # Constructing the plan must not execute it.
+    # Execution remains an explicit later operation.
+    assert decision.capability is None
