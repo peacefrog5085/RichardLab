@@ -290,6 +290,24 @@ def plan_for(decision: Decision) -> ActionPlan:
 
 
 
+def build_control_cycle(state: StateSnapshot) -> ControlCycle:
+    """Build the deterministic State → Decision → Action control cycle.
+
+    This function records the planned control path only. It does not
+    authorize or execute the resulting action.
+    """
+
+    decision = decide(state)
+    plan = plan_for(decision)
+
+    return ControlCycle(
+        state=state,
+        decision=decision,
+        plan=plan,
+        result=None,
+    )
+
+
 def execute_plan(plan: ActionPlan, hive=None) -> ActionResult:
     """Execute an authorized deterministic RichardLab control action.
 

@@ -194,3 +194,40 @@ def test_council_recommendation_pipeline_does_not_execute():
     # Constructing the plan must not execute it.
     # Execution remains an explicit later operation.
     assert decision.capability is None
+
+
+def test_state_becomes_control_cycle_without_execution():
+    from ai.hive.control import (
+        ControlCycle,
+        StateSnapshot,
+        build_control_cycle,
+    )
+
+    state = StateSnapshot(
+        attention="REVIEW",
+        changes=({"type": "test_change"},),
+        observations={"source": "test"},
+    )
+
+    cycle = build_control_cycle(state)
+
+    assert isinstance(cycle, ControlCycle)
+    assert cycle.state == state
+    assert cycle.decision.decision == "REVIEW_STATE_CHANGE"
+    assert cycle.plan.action == "inspect_state_change"
+    assert cycle.result is None
+
+
+def test_control_cycle_preserves_no_action_state():
+    from ai.hive.control import (
+        StateSnapshot,
+        build_control_cycle,
+    )
+
+    state = StateSnapshot(attention="NONE")
+
+    cycle = build_control_cycle(state)
+
+    assert cycle.decision.decision == "NO_ACTION"
+    assert cycle.plan.action == "none"
+    assert cycle.result is None
