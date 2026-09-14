@@ -5,6 +5,7 @@ from mission_control import experiment_inspector
 from mission_control import experiment_registry
 
 from ...hive.evidence import collect_experiment_evidence
+from ...pi_forensics.tool import run_pi_forensics
 from ...tool_registry import register
 
 
@@ -61,6 +62,30 @@ def get_experiment_evidence(experiment_name: str):
     return bundle.as_dict()
 
 
+def run_pi_forensics_tool(
+    pi_dir: str | None = None,
+    birthday: str = "01211981",
+    first_name: str = "RICHARD",
+    last_name: str = "SPRAGUE",
+):
+    """Run the deterministic π Forensics experiment."""
+    import os
+
+    corpus = pi_dir or os.environ.get("RICHARDLAB_PI_DIR")
+    if not corpus:
+        raise ValueError(
+            "π corpus directory is required. Provide pi_dir or set "
+            "RICHARDLAB_PI_DIR."
+        )
+
+    return run_pi_forensics(
+        corpus,
+        birthday=birthday,
+        first_name=first_name,
+        last_name=last_name,
+    )
+
+
 def register_tools():
     register(
         name="list_experiments",
@@ -82,6 +107,17 @@ def register_tools():
         name="get_experiment_family",
         description="Return the related experiment files belonging to the same RichardLab experiment family.",
         function=get_experiment_family,
+        category="experiments",
+        safety="read_only",
+    )
+
+    register(
+        name="run_pi_forensics",
+        description=(
+            "Run the deterministic π Forensics experiment against a "
+            "configured chunked π digit corpus."
+        ),
+        function=run_pi_forensics_tool,
         category="experiments",
         safety="read_only",
     )

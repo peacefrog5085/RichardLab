@@ -264,6 +264,22 @@ SELECTED RICHARDLAB EVIDENCE:
                 },
             )
 
+        if route == "pi_forensics":
+            result = call_tool(
+                "run_pi_forensics",
+            )
+
+            return HiveResult(
+                route=route,
+                worker="experiments",
+                result=result,
+                provider="local",
+                metadata={
+                    "tool": "run_pi_forensics",
+                    "safety": "read_only",
+                },
+            )
+
         if route == "experiment_list":
             result = call_tool("list_experiments")
 

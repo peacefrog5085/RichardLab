@@ -19,6 +19,13 @@ LIST_EXPERIMENT_PATTERNS = [
     r"\bwhat\b.*\bexperiments?\b.*\bexist\b",
 ]
 
+PI_FORENSICS_PATTERNS = [
+    r"\bpi\b.*\bforensics?\b",
+    r"\bforensics?\b.*\bpi\b",
+    r"\bpi\b.*\b200m\b",
+    r"\b200m\b.*\bpi\b",
+]
+
 FAMILY_EXPERIMENT_PATTERNS = [
     r"\bfamily\b.*\bexperiment\b",
     r"\bexperiment\b.*\bfamily\b",
@@ -57,6 +64,9 @@ def classify(prompt: str) -> str:
 
     if matches_any(text, STATUS_PATTERNS):
         return "system_status"
+
+    if matches_any(text, PI_FORENSICS_PATTERNS):
+        return "pi_forensics"
 
     if matches_any(text, REASONING_PATTERNS):
         return "ai_reasoning"
