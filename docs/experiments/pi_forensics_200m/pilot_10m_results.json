@@ -1,0 +1,167 @@
+[
+  {
+    "name": "birthday_8",
+    "encoding": "decimal",
+    "sequence": "01211981",
+    "length": 8,
+    "found": false,
+    "position": null,
+    "context": "",
+    "expected_wait_scale": 100000000,
+    "approx_probability_by_position": 0.0
+  },
+  {
+    "name": "birthday_year",
+    "encoding": "decimal",
+    "sequence": "1981",
+    "length": 4,
+    "found": true,
+    "position": 15176,
+    "context": "45419576258473564216198134073468541117668831",
+    "expected_wait_scale": 10000,
+    "approx_probability_by_position": 0.7807625741246509
+  },
+  {
+    "name": "birthday_month_day",
+    "encoding": "decimal",
+    "sequence": "0121",
+    "length": 4,
+    "found": true,
+    "position": 6304,
+    "context": "06965011784408745196012122859937162313017114",
+    "expected_wait_scale": 10000,
+    "approx_probability_by_position": 0.4676211931118419
+  },
+  {
+    "name": "first_name_a1z26",
+    "encoding": "a1z26",
+    "sequence": "189381184",
+    "length": 9,
+    "found": false,
+    "position": null,
+    "context": "",
+    "expected_wait_scale": 1000000000,
+    "approx_probability_by_position": 0.0
+  },
+  {
+    "name": "last_name_a1z26",
+    "encoding": "a1z26",
+    "sequence": "19161817215",
+    "length": 11,
+    "found": false,
+    "position": null,
+    "context": "",
+    "expected_wait_scale": 100000000000,
+    "approx_probability_by_position": 0.0
+  },
+  {
+    "name": "full_name_a1z26",
+    "encoding": "a1z26",
+    "sequence": "18938118419161817215",
+    "length": 20,
+    "found": false,
+    "position": null,
+    "context": "",
+    "expected_wait_scale": 100000000000000000000,
+    "approx_probability_by_position": 0.0
+  },
+  {
+    "name": "first_name_a1z26_padded",
+    "encoding": "a1z26_padded",
+    "sequence": "18090308011804",
+    "length": 14,
+    "found": false,
+    "position": null,
+    "context": "",
+    "expected_wait_scale": 100000000000000,
+    "approx_probability_by_position": 0.0
+  },
+  {
+    "name": "last_name_a1z26_padded",
+    "encoding": "a1z26_padded",
+    "sequence": "19161801072105",
+    "length": 14,
+    "found": false,
+    "position": null,
+    "context": "",
+    "expected_wait_scale": 100000000000000,
+    "approx_probability_by_position": 0.0
+  },
+  {
+    "name": "full_name_a1z26_padded",
+    "encoding": "a1z26_padded",
+    "sequence": "1809030801180419161801072105",
+    "length": 28,
+    "found": false,
+    "position": null,
+    "context": "",
+    "expected_wait_scale": 10000000000000000000000000000,
+    "approx_probability_by_position": 0.0
+  },
+  {
+    "name": "birthday_then_name",
+    "encoding": "decimal+a1z26",
+    "sequence": "0121198118938118419161817215",
+    "length": 28,
+    "found": false,
+    "position": null,
+    "context": "",
+    "expected_wait_scale": 10000000000000000000000000000,
+    "approx_probability_by_position": 0.0
+  },
+  {
+    "name": "name_then_birthday",
+    "encoding": "a1z26+decimal",
+    "sequence": "1893811841916181721501211981",
+    "length": 28,
+    "found": false,
+    "position": null,
+    "context": "",
+    "expected_wait_scale": 10000000000000000000000000000,
+    "approx_probability_by_position": 0.0
+  },
+  {
+    "name": "birthday_then_padded_name",
+    "encoding": "decimal+a1z26_padded",
+    "sequence": "012119811809030801180419161801072105",
+    "length": 36,
+    "found": false,
+    "position": null,
+    "context": "",
+    "expected_wait_scale": 1000000000000000000000000000000000000,
+    "approx_probability_by_position": 0.0
+  },
+  {
+    "name": "padded_name_then_birthday",
+    "encoding": "a1z26_padded+decimal",
+    "sequence": "180903080118041916180107210501211981",
+    "length": 36,
+    "found": false,
+    "position": null,
+    "context": "",
+    "expected_wait_scale": 1000000000000000000000000000000000000,
+    "approx_probability_by_position": 0.0
+  },
+  {
+    "name": "first_name_ascii",
+    "encoding": "ascii_decimal",
+    "sequence": "82736772658268",
+    "length": 14,
+    "found": false,
+    "position": null,
+    "context": "",
+    "expected_wait_scale": 100000000000000,
+    "approx_probability_by_position": 0.0
+  },
+  {
+    "name": "last_name_ascii",
+    "encoding": "ascii_decimal",
+    "sequence": "83808265718569",
+    "length": 14,
+    "found": false,
+    "position": null,
+    "context": "",
+    "expected_wait_scale": 100000000000000,
+    "approx_probability_by_position": 0.0
+  }
+]
