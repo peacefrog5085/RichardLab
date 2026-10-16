@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 
+set -o pipefail
+umask 077
 LAB="$HOME/RichardLab"
-REPORT_DIR="$LAB/reports"
+REPORT_DIR="$LAB/private_reports"
 TIMESTAMP=$(date '+%Y-%m-%d_%H-%M-%S')
 REPORT="$REPORT_DIR/system_scan_$TIMESTAMP.txt"
 
-mkdir -p "$REPORT_DIR"
+mkdir -p "$REPORT_DIR" || exit 1
+chmod 700 "$REPORT_DIR" || exit 1
 
 {
 echo "============================================================"
@@ -143,8 +146,9 @@ echo "============================================================"
 echo "SCAN COMPLETE"
 echo "============================================================"
 
-} | tee "$REPORT"
+} > "$REPORT" || exit 1
 
 echo
+echo "Private diagnostic saved locally; review and sanitize before sharing."
 echo "Report saved to:"
 echo "$REPORT"

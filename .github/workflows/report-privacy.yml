@@ -1,0 +1,15 @@
+name: Report privacy
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  report-privacy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python tools/check_report_privacy.py

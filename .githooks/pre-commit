@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+# Opt in once per clone: git config core.hooksPath .githooks
+exec python3 tools/check_report_privacy.py

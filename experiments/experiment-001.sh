@@ -13,7 +13,7 @@ echo "          MACHINE CAPABILITY PROFILE"
 echo "============================================================"
 echo
 echo "Date: $(date)"
-echo "Machine: $(hostname)"
+echo "Machine: benchmark-host"
 echo
 
 echo "================ HARDWARE ================="
@@ -30,7 +30,7 @@ lspci | grep -Ei 'VGA|3D|Display'
 
 echo
 echo "Storage:"
-df -h "$HOME"
+echo "Live storage usage omitted from public benchmark."
 
 echo
 echo "================ CPU TEST ================="
@@ -136,7 +136,7 @@ date
 
 echo
 echo "Report:"
-echo "$REPORT"
+echo "reports/$(basename "$REPORT")"
 
 echo
 echo "============================================================"

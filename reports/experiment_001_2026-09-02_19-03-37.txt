@@ -5,7 +5,7 @@
 ============================================================
 
 Date: Wed Sep  2 07:03:37 PM EDT 2026
-Machine: rich-IdeaPad-3-15IIL05
+Machine: benchmark-host
 
 ================ HARDWARE =================
 CPU:
@@ -26,8 +26,7 @@ Graphics:
 00:02.0 VGA compatible controller: Intel Corporation Iris Plus Graphics G1 (Ice Lake) (rev 07)
 
 Storage:
-Filesystem      Size  Used Avail Use% Mounted on
-/dev/sda2       468G   58G  386G  14% /
+Live storage usage omitted from public benchmark.
 
 ================ CPU TEST =================
 Calculating SHA256 hashes...
@@ -63,6 +62,6 @@ Experiment completed:
 Wed Sep  2 07:03:44 PM EDT 2026
 
 Report:
-/home/rich/RichardLab/reports/experiment_001_2026-09-02_19-03-37.txt
+reports/experiment_001_2026-09-02_19-03-37.txt
 
 ============================================================

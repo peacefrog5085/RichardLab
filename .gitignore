@@ -61,3 +61,7 @@ music_lab/*_backup.py
 /data/*
 !/data/oui/
 !/data/oui/README.md
+
+# Raw host diagnostics must remain local, even when generated elsewhere.
+/private_reports/
+**/system_scan_*.txt
