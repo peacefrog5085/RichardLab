@@ -10,7 +10,7 @@
 
 ## Capability registry
 
-`ai/integrations/registry.json` is the source of declared connector capabilities. Every connector defaults to disabled, unverified, read-only, and approval-required for mutations. A declaration means ?known to policy,? not ?connected.?
+`ai/integrations/registry.json` is the source of declared connector capabilities. Every connector defaults to disabled, unverified, read-only, and approval-required for mutations. A declaration means “known to policy,” not “connected.”
 
 To activate one connector in a later reviewed change:
 
