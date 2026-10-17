@@ -26,12 +26,27 @@ def write_registry(tmp_path, *, enabled=True, status="verified", access="read_on
     return IntegrationRegistry(path)
 
 
-def test_production_registry_defaults_every_capability_disabled_and_unverified():
+def test_production_registry_keeps_every_capability_disabled():
     capabilities = IntegrationRegistry().list()
+    verified_github_reads = {
+        "repository.read",
+        "issues.read",
+        "pull_requests.read",
+        "checks.read",
+    }
+
     assert capabilities
     assert all(not item.enabled for item in capabilities)
-    assert all(item.connection_status == "unverified" for item in capabilities)
-    assert all(item.access == "read_only" for item in capabilities)
+    assert {
+        item.name
+        for item in capabilities
+        if item.integration_id == "github" and item.connection_status == "verified"
+    } == verified_github_reads
+    assert all(
+        item.connection_status == "unverified"
+        for item in capabilities
+        if not (item.integration_id == "github" and item.name in verified_github_reads)
+    )
 
 
 def test_disabled_integration_fails_closed(tmp_path):
