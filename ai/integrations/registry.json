@@ -7,7 +7,8 @@
     "writes_require_approval": true
   },
   "integrations": [
-    {"id": "github", "purpose": "source, issues, pull requests, and checks", "capabilities": ["repository.read", "issues.read", "pull_requests.read", "repository.write", "issues.write", "pull_requests.write"]},
+    {"id": "github", "purpose": "verified read-only source, metadata, issues, pull requests, and checks", "enabled": false, "connection_status": "verified", "access": "read_only", "capabilities": ["repository.read", "issues.read", "pull_requests.read", "checks.read"]},
+    {"id": "github", "purpose": "unverified GitHub mutations; unavailable without a separate approval and credential change", "enabled": false, "connection_status": "unverified", "access": "write", "writes_require_approval": true, "capabilities": ["repository.write", "issues.write", "pull_requests.write"]},
     {"id": "supabase", "purpose": "structured records and durable application data", "capabilities": ["database.read", "database.write"]},
     {"id": "cloudflare", "purpose": "deployment status, DNS, and edge configuration", "capabilities": ["deployment.read", "dns.read", "deployment.write", "dns.write"]},
     {"id": "codex", "purpose": "reviewable software changes", "capabilities": ["workspace.read", "workspace.write"]},
