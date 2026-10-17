@@ -15,7 +15,7 @@ Verified capability mappings:
 | `repository.read` | Repository metadata returned for `peacefrog5085/RichardLab` |
 | `issues.read` | Issues endpoint returned results |
 | `pull_requests.read` | Pull requests endpoint returned results |
-| `checks.read` | Check-runs endpoint returned results |
+| `checks.read` | The public repository's check-runs endpoint returned results; this is not evidence of a token-granted Checks permission |
 
 ## Runtime evidence
 
@@ -34,14 +34,24 @@ The pilot credential was supplied through the
 
 ## Permission-screen evidence
 
-The repository automation connection cannot open or export the fine-grained
-credential's private permission screen. The operator reported configuring a
-separate GitHub credential limited to this repository with read-only access for
-contents, metadata, pull requests, checks, and issues. A screenshot or exported
-permission summary, with the token value fully hidden, may be attached to a
-private audit record for independent confirmation.
+The operator supplied screenshots, reviewed on 2026-10-17, showing:
 
-Do not put a token value, partial token, authorization header, or private key in
+- token name: `RichardLab Echo Read Only`
+- repository access restricted to `peacefrog5085/RichardLab`
+- zero account permissions
+- read-only repository permissions for Contents, Issues, Metadata, and Pull requests
+- no Actions or Commit statuses permission
+- expiration on 2026-11-16
+- GitHub confirmation that the token update succeeded
+- no token value displayed
+
+The fine-grained personal-token permission selector did not offer a Checks
+permission. The credential was not broadened with Actions or Commit statuses as
+a substitute. Check-run visibility is therefore accepted only for this public
+repository and must be re-evaluated before the repository becomes private.
+
+The screenshots are intentionally not committed to the public repository. Do
+not put a token value, partial token, authorization header, or private key in
 this repository, an issue, a pull request, or an Actions artifact.
 
 ## Limits
