@@ -26,4 +26,4 @@ jobs:
         shell: bash
         run: test -n "$RICHARDLAB_GITHUB_READ_TOKEN"
       - name: Run bounded read-only pilot
-        run: python tools/github_readonly_pilot.py
+        run: python -m tools.github_readonly_pilot
