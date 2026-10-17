@@ -17,13 +17,13 @@ The heartbeat:
 Architecture:
 
     existing sensors
-          ↓
+          ?
     HeartbeatSnapshot
-          ↓
+          ?
     HeartbeatDiff
-          ↓
+          ?
     HeartbeatAttention
-          ↓
+          ?
     Hive when reasoning is actually warranted
 """
 
@@ -402,32 +402,32 @@ def format_result(result: HeartbeatResult) -> str:
     s = result.snapshot
     lines = [
         "",
-        "╔══════════════════════════════════════════════════════════╗",
-        "║                 RICHARDLAB HEARTBEAT                   ║",
-        "╠══════════════════════════════════════════════════════════╣",
-        f"║ Pulse:        {result.pulse:<40}║",
-        f"║ Time:         {s.timestamp:<40}║",
-        f"║ Attention:    {result.attention:<40}║",
-        "║                                                        ║",
-        "║ SYSTEM                                                 ║",
-        f"║ CPU:          {s.system['cpu']:<10} ({s.system['cpu_value']:5.1f}%)"
-        "                       ║",
-        f"║ RAM:          {s.system['ram']:<10} ({s.system['ram_value']:5.1f}%)"
-        "                       ║",
-        f"║ DISK:         {s.system['disk']:<10} ({s.system['disk_value']:5.1f}%)"
-        "                       ║",
-        "║                                                        ║",
-        "║ CONTINUITY                                             ║",
-        f"║ Git:          {s.git['status']:<40}║",
-        f"║ Commit:       {s.git['commit'][:40]:<40}║",
-        f"║ Projects:     {s.projects}/{s.ready_projects:<38}║",
-        f"║ Experiments:  {s.experiments:<40}║",
-        f"║ Families:     {s.experiment_families:<40}║",
-        f"║ Knowledge:    {s.knowledge_records:<40}║",
-        "║                                                        ║",
-        f"║ Changes:      {len(result.changes):<40}║",
-        f"║ Decision:     {result.reason[:40]:<40}║",
-        "╚══════════════════════════════════════════════════════════╝",
+        "????????????????????????????????????????????????????????????",
+        "?                 RICHARDLAB HEARTBEAT                   ?",
+        "????????????????????????????????????????????????????????????",
+        f"? Pulse:        {result.pulse:<40}?",
+        f"? Time:         {s.timestamp:<40}?",
+        f"? Attention:    {result.attention:<40}?",
+        "?                                                        ?",
+        "? SYSTEM                                                 ?",
+        f"? CPU:          {s.system['cpu']:<10} ({s.system['cpu_value']:5.1f}%)"
+        "                       ?",
+        f"? RAM:          {s.system['ram']:<10} ({s.system['ram_value']:5.1f}%)"
+        "                       ?",
+        f"? DISK:         {s.system['disk']:<10} ({s.system['disk_value']:5.1f}%)"
+        "                       ?",
+        "?                                                        ?",
+        "? CONTINUITY                                             ?",
+        f"? Git:          {s.git['status']:<40}?",
+        f"? Commit:       {s.git['commit'][:40]:<40}?",
+        f"? Projects:     {s.projects}/{s.ready_projects:<38}?",
+        f"? Experiments:  {s.experiments:<40}?",
+        f"? Families:     {s.experiment_families:<40}?",
+        f"? Knowledge:    {s.knowledge_records:<40}?",
+        "?                                                        ?",
+        f"? Changes:      {len(result.changes):<40}?",
+        f"? Decision:     {result.reason[:40]:<40}?",
+        "????????????????????????????????????????????????????????????",
         "",
     ]
 
