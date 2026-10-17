@@ -1,0 +1,29 @@
+name: GitHub read-only pilot
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - ai/integrations/github_readonly.py
+      - tools/github_readonly_pilot.py
+      - .github/workflows/github-readonly-pilot.yml
+permissions:
+  contents: read
+jobs:
+  pilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      RICHARDLAB_GITHUB_READ_TOKEN: ${{ secrets.RICHARDLAB_GITHUB_READ_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify secret is configured
+        shell: bash
+        run: test -n "$RICHARDLAB_GITHUB_READ_TOKEN"
+      - name: Run bounded read-only pilot
+        run: python tools/github_readonly_pilot.py
