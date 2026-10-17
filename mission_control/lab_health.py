@@ -5,7 +5,8 @@ import subprocess
 import re
 import psutil
 
-LAB = Path.home() / "RichardLab"
+# Resolve the checked-out project rather than assuming a home-directory install.
+LAB = Path(__file__).resolve().parents[1]
 PROJECTS = LAB / "projects"
 EXPERIMENTS = LAB / "experiments"
 REPORTS = LAB / "reports"

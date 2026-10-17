@@ -25,6 +25,11 @@ projects/*/logs/
 .env.*
 *.pem
 *.key
+*.p12
+*.pfx
+credentials.json
+secrets.json
+service-account.json
 
 # OS/editor files
 .DS_Store

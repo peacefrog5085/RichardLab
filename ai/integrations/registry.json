@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "defaults": {
+    "enabled": false,
+    "connection_status": "unverified",
+    "access": "read_only",
+    "writes_require_approval": true
+  },
+  "integrations": [
+    {"id": "github", "purpose": "source, issues, pull requests, and checks", "capabilities": ["repository.read", "issues.read", "pull_requests.read", "repository.write", "issues.write", "pull_requests.write"]},
+    {"id": "supabase", "purpose": "structured records and durable application data", "capabilities": ["database.read", "database.write"]},
+    {"id": "cloudflare", "purpose": "deployment status, DNS, and edge configuration", "capabilities": ["deployment.read", "dns.read", "deployment.write", "dns.write"]},
+    {"id": "codex", "purpose": "reviewable software changes", "capabilities": ["workspace.read", "workspace.write"]},
+    {"id": "context7", "purpose": "versioned technical documentation", "capabilities": ["documentation.read"]},
+    {"id": "notion", "purpose": "research notes and specifications", "capabilities": ["pages.read", "pages.write"]},
+    {"id": "google_drive", "purpose": "documents, datasets, and evidence", "capabilities": ["files.read", "files.write"]},
+    {"id": "gmail", "purpose": "authorized communications", "capabilities": ["messages.read", "messages.send"]},
+    {"id": "google_calendar", "purpose": "milestones and experiment schedules", "capabilities": ["events.read", "events.write"]},
+    {"id": "slack", "purpose": "team notifications and activity", "capabilities": ["messages.read", "messages.send"]},
+    {"id": "miro", "purpose": "architecture and visual planning", "capabilities": ["boards.read", "boards.write"]},
+    {"id": "browserstack", "purpose": "cross-browser test results", "capabilities": ["tests.read", "tests.run"]},
+    {"id": "elicit", "purpose": "academic evidence discovery", "capabilities": ["research.read"]},
+    {"id": "consensus", "purpose": "scientific literature discovery", "capabilities": ["research.read"]}
+  ]
+}
