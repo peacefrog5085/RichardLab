@@ -43,6 +43,7 @@ def make_snapshot(**overrides):
 
 def test_first_pulse_creates_baseline(tmp_path, monkeypatch):
     state_file = tmp_path / "heartbeat_state.json"
+    monkeypatch.setattr("mission_control.heartbeat.collect_snapshot", make_snapshot)
 
     result = pulse(state_file)
 
@@ -53,8 +54,9 @@ def test_first_pulse_creates_baseline(tmp_path, monkeypatch):
     assert state_file.exists()
 
 
-def test_second_unchanged_pulse_is_quiet(tmp_path):
+def test_second_unchanged_pulse_is_quiet(tmp_path, monkeypatch):
     state_file = tmp_path / "heartbeat_state.json"
+    monkeypatch.setattr("mission_control.heartbeat.collect_snapshot", make_snapshot)
 
     first = pulse(state_file)
     second = pulse(state_file)

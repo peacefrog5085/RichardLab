@@ -46,7 +46,7 @@ from mission_control.lab_health import (
 from knowledge import load_all
 
 
-LAB = Path.home() / "RichardLab"
+LAB = Path(__file__).resolve().parents[1]
 STATE_FILE = LAB / "data" / "heartbeat_state.json"
 
 MODULES = [

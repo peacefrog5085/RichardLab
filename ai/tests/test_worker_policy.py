@@ -116,7 +116,8 @@ def test_policy_does_not_execute_workers():
     assert worker_b.executed is False
 
 
-def test_openai_worker_is_registered_and_ready():
+def test_openai_worker_is_registered_and_requires_auth_when_key_is_absent(monkeypatch):
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     config = load_config()
     registry = build_real_registry(config)
 
@@ -128,5 +129,5 @@ def test_openai_worker_is_registered_and_ready():
     health = worker.health()
 
     assert health["provider"] == "openai"
-    assert health["status"] == "READY"
+    assert health["status"] == "AUTH_REQUIRED"
     assert health["model"] == "gpt-5.6-luna"

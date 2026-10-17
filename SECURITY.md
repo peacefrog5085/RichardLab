@@ -1,21 +1,15 @@
 # Security Policy
 
-## Supported Versions
+## Supported code
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+Security fixes target the current default branch. Historical snapshots and local experiment artifacts are not supported releases.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+## Reporting a vulnerability
 
-## Reporting a Vulnerability
+Use GitHub's private vulnerability reporting for this repository. Do not place credentials, exploit details, private host reports, or personal data in a public issue. Revoke and rotate any exposed credential immediately; deleting a file is not sufficient.
 
-Use this section to tell people how to report a vulnerability.
+## Integration policy
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+External integrations are disabled and unverified by default. Read access must use the minimum provider scopes. Every external write requires an explicit, exact-scope, unexpired approval and post-action verification. Production deployment, permission expansion, destructive changes, and Git history rewriting require separate operator confirmation.
+
+See `docs/security/THREAT_MODEL.md` and `docs/integrations/BASELINE_AND_DEPLOYMENT.md` for the current controls and residual risks.

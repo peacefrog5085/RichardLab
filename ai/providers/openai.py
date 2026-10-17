@@ -46,6 +46,7 @@ class OpenAIProvider(AIProvider):
             return {
                 "provider": self.name,
                 "status": "AUTH_REQUIRED",
+                "model": self.model,
                 "reason": (
                     f"Environment variable "
                     f"{self.api_key_env} is not set"
