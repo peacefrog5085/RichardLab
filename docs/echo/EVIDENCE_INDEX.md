@@ -43,3 +43,7 @@
 ## E-011 — Offline report matching CI
 
 **VERIFIED** — GitHub Actions recorded both push workflows as completed successfully on `codex/echo-plugin-security` at `de8441e47d10fd19c39f0ee2ca1b31e9c69f2226`. These results cover that revision. [Integration security](https://github.com/peacefrog5085/RichardLab/actions/runs/42163033853) · [Report privacy](https://github.com/peacefrog5085/RichardLab/actions/runs/42163033889)
+
+## E-012 — Offline report verification CI
+
+**VERIFIED** — GitHub Actions recorded both push workflows as completed successfully on `codex/echo-plugin-security` at `e3d98f822b97e2e4a97b1d8c7cbcddbd23b83ab5`. These results cover that revision. [Integration security](https://github.com/peacefrog5085/RichardLab/actions/runs/42234444394) · [Report privacy](https://github.com/peacefrog5085/RichardLab/actions/runs/42234444378)
