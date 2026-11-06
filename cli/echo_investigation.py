@@ -80,6 +80,30 @@ def match_report(path, packet_digest):
         raise ValueError("Report packet digest does not match the supplied packet")
 
 
+def source_line_suffixes(source, passages):
+    if "line_ranges" not in source:
+        return {}
+    if "path" not in source:
+        raise ValueError("Source line ranges require a source path")
+    ranges = source["line_ranges"]
+    if not isinstance(ranges, dict):
+        raise ValueError("Source line ranges must be keyed by passage ID")
+    suffixes = {}
+    for passage_id, bounds in ranges.items():
+        if passage_id not in passages:
+            raise ValueError("Unknown passage in source line ranges")
+        if (
+            not isinstance(bounds, list)
+            or len(bounds) != 2
+            or any(type(bound) is not int for bound in bounds)
+            or not 1 <= bounds[0] <= bounds[1]
+        ):
+            raise ValueError("Source line ranges must contain two positive, ordered integers")
+        start, end = bounds
+        suffixes[passage_id] = f":{start}" if start == end else f":{start}–{end}"
+    return suffixes
+
+
 def render_report(packet, review=None, *, packet_digest):
     if not isinstance(packet, dict):
         raise ValueError("Packet must be an object")
@@ -111,7 +135,7 @@ def render_report(packet, review=None, *, packet_digest):
         for passage_id, passage in passages.items():
             require_text(passage_id, "Passage ID")
             require_text(passage, "Passage")
-        sources[source_id] = (origin, location, passages)
+        sources[source_id] = (origin, location, passages, source_line_suffixes(source, passages))
 
     lines = [
         "# Echo investigation", "", f"**{evidence_kind.capitalize()} evidence**", "",
@@ -150,7 +174,7 @@ def render_report(packet, review=None, *, packet_digest):
             relation = citation.get("relation")
             if source_id not in sources:
                 raise ValueError(f"Unknown source in claim {number}")
-            origin, location, passages = sources[source_id]
+            origin, location, passages, line_suffixes = sources[source_id]
             if passage_id not in passages:
                 raise ValueError(f"Unknown passage in claim {number}")
             if quote not in passages[passage_id]:
@@ -160,7 +184,8 @@ def render_report(packet, review=None, *, packet_digest):
             origins.add(origin)
             relations.add(relation)
             reference = markdown(f"{source_id}/{passage_id}")
-            lines.append(f"- **{reference}** ({location}, {relation}) — {markdown(quote)}")
+            locator = location + line_suffixes.get(passage_id, "")
+            lines.append(f"- **{reference}** ({locator}, {relation}) — {markdown(quote)}")
         if citations:
             lines.extend(["", f"{len(origins)} distinct origins across {len(citations)} citations."])
         if len(origins) < len(citations):

@@ -39,6 +39,40 @@ class EchoInvestigationTest(unittest.TestCase):
         path.write_text(json.dumps(review), encoding="utf-8")
         return str(path)
 
+    def test_citations_show_optional_passage_line_ranges(self):
+        first, second, _ = self.packet["sources"]
+        first.update(path="logs/first.txt", line_ranges={"P1": [12, 14]})
+        second.update(path="logs/second.txt", line_ranges={"P1": [7, 7]})
+        result = self.run_cli()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        report = self.output.read_text(encoding="utf-8")
+        self.assertIn("- **S1/P1** (trial-log, logs/first.txt:12–14, supports)", report)
+        self.assertIn("- **S2/P1** (trial-log, logs/second.txt:7, supports)", report)
+        self.assertIn("- **S3/P1** (observer-log, contradicts)", report)
+
+    def test_citations_reject_invalid_passage_line_ranges(self):
+        source = self.packet["sources"][0]
+        source["path"] = "logs/first.txt"
+        for ranges, message in (
+            ({"P1": [14, 12]}, "positive, ordered integers"),
+            ({"P1": [0, 1]}, "positive, ordered integers"),
+            ({"P1": [True, 2]}, "positive, ordered integers"),
+            ({"missing": [1, 2]}, "Unknown passage in source line ranges"),
+        ):
+            with self.subTest(ranges=ranges):
+                source["line_ranges"] = ranges
+                result = self.run_cli()
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(message, result.stderr)
+                self.assertFalse(self.output.exists())
+
+    def test_citation_line_ranges_require_source_path(self):
+        self.packet["sources"][0]["line_ranges"] = {"P1": [1, 1]}
+        result = self.run_cli()
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("Source line ranges require a source path", result.stderr)
+        self.assertFalse(self.output.exists())
+
     def test_citations_distinguish_source_paths_without_splitting_origin(self):
         paths = (".github/workflows/first.yml", ".github/workflows/second.yml")
         for source, path in zip(self.packet["sources"], paths):

@@ -30,6 +30,8 @@ An optional source `path` such as `.github/workflows/report-privacy.yml` appears
 
 If an older report omitted paths already present in the packet, regenerate the report for byte-for-byte verification. Its original packet digest still works with `--match-report`.
 
+A source with a `path` can also supply `"line_ranges": {"P1": [12, 14]}`. The bounds are inclusive one-based integers, and each key must name a passage in that source. The citation displays the path followed by the range, or a single line number when the bounds match. These locators come from the packet author. Quote checking still uses the supplied passage text.
+
 ### Optional human review
 
 Pass `--review reports/echo-review.json` to record a local review. The review file contains three fields.

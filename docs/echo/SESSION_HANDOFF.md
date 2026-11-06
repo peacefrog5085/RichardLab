@@ -195,3 +195,11 @@
 - Files changed — Updated the handoff and evidence index. Generated reports, local packets, review drafts, and `.venv` stayed local.
 - Next action — **PROVISIONAL**. Let a source with a repository-relative path supply optional one-based line ranges keyed by passage ID. Render those ranges in citations so reviewers can find excerpts in the original file. Validate the ranges against the packet schema and treat them as supplied metadata.
 - Approvals — The previous push approval covered `31931e4` and `cb7d892`. The proposed slice, a new commit, and any push require separate approval.
+
+## Citation line range follow-up — ECHO-2026-11-06-09
+
+- Branch and commit — Local `codex/echo-plugin-security` at `5455d80` contains the approved CI documentation commit. The line range slice is in the working tree.
+- Completed — Sources with a repository-relative path can supply inclusive one-based `line_ranges` keyed by passage ID. Citations display these as author-supplied locators and retain the existing format when ranges are absent.
+- **VERIFIED** — Six new cases failed before implementation. The full suite then passed 215 tests and 40 subtests. A temporary replay rendered line numbers from the pinned workflow files and passed exact verification. Tracked-report privacy and `git diff --check` passed. The security audit returned REVIEW for the dirty tree and absence of an Ollama listener.
+- Component status — Local Hive, Council, approval, and integration gateway tests passed as part of the suite. No separately named Queen component was found in the tracked code or docs. Live deployment and provider health were not checked.
+- Next action and approvals — Review the working-tree slice. Commit and push require separate approval.
