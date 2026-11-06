@@ -39,6 +39,56 @@ class EchoInvestigationTest(unittest.TestCase):
         path.write_text(json.dumps(review), encoding="utf-8")
         return str(path)
 
+    def use_pinned_workflow_excerpt(self):
+        commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
+        path = ".github/workflows/integration-security.yml"
+        blob = subprocess.check_output(["git", "show", f"{commit}:{path}"], cwd=ROOT, text=True)
+        quote = "- run: python -m pytest -q"
+        line, = (number for number, text in enumerate(blob.splitlines(), 1) if quote in text)
+        source = self.packet["sources"][0]
+        source.update(commit=commit, path=path, passages={"P1": quote}, line_ranges={"P1": [line, line]})
+        self.packet["sources"] = [source]
+        self.packet["claims"] = [{
+            "text": "The pinned workflow runs pytest.",
+            "citations": [{"source": "S1", "passage": "P1", "quote": quote, "relation": "supports"}],
+        }]
+        return source
+
+    def test_check_sources_accepts_pinned_git_excerpt_without_writing(self):
+        self.use_pinned_workflow_excerpt()
+        result = self.run_cli("--check-sources", with_output=False)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), "Source passages verified.")
+        self.assertCountEqual(self.directory.iterdir(), [self.directory / "packet.json"])
+
+    def test_check_sources_rejects_wrong_lines(self):
+        source = self.use_pinned_workflow_excerpt()
+        source["line_ranges"]["P1"] = [1, 1]
+        result = self.run_cli("--check-sources", with_output=False)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("Passage does not match pinned Git lines", result.stderr)
+        self.assertEqual(result.stdout, "")
+
+    def test_check_sources_rejects_unavailable_or_unpinned_commit(self):
+        source = self.use_pinned_workflow_excerpt()
+        for commit, message in (("f" * 40, "Pinned Git commit is unavailable"),
+                                ("HEAD", "Source commit must be a full Git object ID")):
+            with self.subTest(commit=commit):
+                source["commit"] = commit
+                result = self.run_cli("--check-sources", with_output=False)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(message, result.stderr)
+                self.assertEqual(result.stdout, "")
+
+    def test_check_sources_requires_line_range_for_every_passage(self):
+        source = self.use_pinned_workflow_excerpt()
+        source["line_ranges"] = {}
+        result = self.run_cli("--check-sources", with_output=False)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("Source check requires a line range for every passage", result.stderr)
+        ordinary = self.run_cli("--check", with_output=False)
+        self.assertEqual(ordinary.returncode, 0, ordinary.stderr)
+
     def test_citations_show_optional_passage_line_ranges(self):
         first, second, _ = self.packet["sources"]
         first.update(path="logs/first.txt", line_ranges={"P1": [12, 14]})

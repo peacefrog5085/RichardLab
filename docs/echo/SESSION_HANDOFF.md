@@ -211,3 +211,10 @@
 - Files changed — Updated the handoff and evidence index. Generated reports, local packets, review drafts, and `.venv` stayed local.
 - Next action — **PROVISIONAL**. Add an opt-in offline check for sources pinned to a commit already present in the local Git repository. Compare the supplied passage with the stated line range in the file at that commit. Keep this separate from ordinary packet validation so packets without Git locators still work.
 - Approvals — The previous push approval covered `5455d80` and `3735519`. The proposed slice, a new commit, and any push require separate approval.
+
+## Pinned source verification follow-up — ECHO-2026-11-06-11
+
+- Branch and commit — Local `codex/echo-plugin-security` at `77be29c` contains the approved CI documentation commit. The pinned source check is in the working tree.
+- Completed — Added opt-in `--check-sources`. It checks every passage against its stated file and inclusive line range at the full local commit ID. Git reads disable lazy fetching and replacement objects. The mode writes no reports.
+- **VERIFIED** — Five cases failed before implementation. The full suite then passed 219 tests and 42 subtests. A temporary real-packet replay verified both pinned workflow files. Tracked-report privacy and `git diff --check` passed. The audit returned REVIEW for the dirty tree and absence of an Ollama listener.
+- Next action and approvals — Review the working-tree slice. Commit and push require separate approval.

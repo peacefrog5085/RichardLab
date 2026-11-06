@@ -6,12 +6,14 @@ import html
 import json
 import os
 import re
+import subprocess
 import sys
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
 
 MAX_JSON_BYTES = 64 * 1024
+MAX_SOURCE_BYTES = 1024 * 1024
 
 
 def require_text(value, field):
@@ -102,6 +104,50 @@ def source_line_suffixes(source, passages):
         start, end = bounds
         suffixes[passage_id] = f":{start}" if start == end else f":{start}–{end}"
     return suffixes
+
+
+def read_local_git(*arguments, error):
+    try:
+        result = subprocess.run(
+            ["git", "--no-lazy-fetch", "--no-replace-objects", *arguments],
+            env={**os.environ, "GIT_ALLOW_PROTOCOL": ""},
+            stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+            timeout=10, check=True,
+        )
+    except (OSError, subprocess.SubprocessError):
+        raise ValueError(error) from None
+    return result.stdout
+
+
+def check_pinned_sources(packet):
+    # The renderer has already validated the packet, including paths and ranges.
+    for source in packet["sources"]:
+        commit = source.get("commit")
+        if not isinstance(commit, str) or not re.fullmatch(r"(?:[0-9a-fA-F]{40}|[0-9a-fA-F]{64})", commit):
+            raise ValueError("Source commit must be a full Git object ID")
+        passages = source["passages"]
+        ranges = source.get("line_ranges", {})
+        if ranges.keys() != passages.keys():
+            raise ValueError("Source check requires a line range for every passage")
+
+        commit = commit.lower()
+        resolved = read_local_git("rev-parse", "--verify", f"{commit}^{{commit}}",
+                                  error="Pinned Git commit is unavailable")
+        if resolved.strip() != commit.encode("ascii"):
+            raise ValueError("Source commit must be a full Git object ID for a commit")
+        object_spec = f"{commit}:{source['path']}"
+        size = read_local_git("cat-file", "-s", object_spec, error="Pinned Git source file is unavailable")
+        if int(size) > MAX_SOURCE_BYTES:
+            raise ValueError("Pinned Git source file exceeds 1 MiB")
+        blob = read_local_git("cat-file", "blob", object_spec, error="Pinned Git source is not a readable blob")
+        try:
+            lines = blob.decode("utf-8").replace("\r\n", "\n").removesuffix("\n").split("\n")
+        except UnicodeDecodeError:
+            raise ValueError("Pinned Git source file must be UTF-8") from None
+        for passage_id, passage in passages.items():
+            start, end = ranges[passage_id]
+            if end > len(lines) or passage.replace("\r\n", "\n") not in "\n".join(lines[start - 1:end]):
+                raise ValueError("Passage does not match pinned Git lines")
 
 
 def render_report(packet, review=None, *, packet_digest):
@@ -224,6 +270,7 @@ def main(argv=None):
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--output", type=Path, help="Local Markdown report path")
     mode.add_argument("--check", action="store_true", help="Validate inputs without writing a report")
+    mode.add_argument("--check-sources", action="store_true", help="Verify passages against local Git commits")
     mode.add_argument("--review-template", action="store_true", help="Print draft review JSON")
     mode.add_argument("--match-report", type=Path, help="Compare a saved report's packet digest")
     mode.add_argument("--verify-report", type=Path, help="Compare a saved report with regenerated Markdown")
@@ -252,7 +299,10 @@ def main(argv=None):
         report = render_report(packet, review, packet_digest=packet_digest)
         if args.output is None:
             report_bytes = report.encode("utf-8")
-            if args.verify_report is not None:
+            if args.check_sources:
+                check_pinned_sources(packet)
+                print("Source passages verified.")
+            elif args.verify_report is not None:
                 with args.verify_report.open("rb") as handle:
                     saved_bytes = handle.read(len(report_bytes) + 1)
                 if saved_bytes != report_bytes:

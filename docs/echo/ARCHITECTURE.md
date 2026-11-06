@@ -62,7 +62,11 @@ python -m cli.echo_investigation docs/echo/examples/synthetic-investigation.json
 
 Check mode runs the same validation as report generation, including quote matching and review digest verification. It uses local files, leaves the packet and review intact, and creates or modifies no report files. Each claim must include a citations list. Use an explicit empty list for a claim with no evidence citations.
 
-Choose exactly one of `--check`, `--output`, `--review-template`, `--match-report`, and `--verify-report`. Check mode prints `Validation passed.` and exits with code 0 on success. It prints an error to standard error and exits with code 1 for invalid or unreadable inputs. Command-line usage errors exit with code 2.
+Choose exactly one of `--check`, `--check-sources`, `--output`, `--review-template`, `--match-report`, and `--verify-report`. Check mode prints `Validation passed.` and exits with code 0 on success. It prints an error to standard error and exits with code 1 for invalid or unreadable inputs. Command-line usage errors exit with code 2.
+
+### Check pinned source passages
+
+From the local Git checkout, run `python -m cli.echo_investigation PACKET.json --check-sources`. Every source needs a full Git commit ID in `commit`, a repository-relative `path`, and a `line_ranges` entry for every passage. The check compares each passage as an exact substring of its inclusive line range, normalizing CRLF to LF. It reads UTF-8 Git blobs up to 1 MiB, uses only objects already available locally, and writes no report. Use ordinary `--check` for packets without complete Git locators.
 
 ### Start a review from a template
 
