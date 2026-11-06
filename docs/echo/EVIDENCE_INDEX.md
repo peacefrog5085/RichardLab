@@ -79,3 +79,7 @@
 ## E-020 — Local Echo status API CI
 
 **VERIFIED** — GitHub Actions recorded both push workflows as completed successfully on `codex/echo-plugin-security` at `cbd183799f12791e4c045aafb894d22d43e9c8a2`. These results cover the pushed revision of the local-only status API. [Integration security](https://github.com/peacefrog5085/RichardLab/actions/runs/42301729646) · [Report privacy](https://github.com/peacefrog5085/RichardLab/actions/runs/42301729711)
+
+## E-021 — Windows Echo bridge CI
+
+**VERIFIED** — Both GitHub Actions push workflows completed successfully on `codex/echo-plugin-security` at `b68a7b6c91d5fffad6316bb6a52846363891d29e`. These results cover the pushed Windows bridge revision. [Integration security](https://github.com/peacefrog5085/RichardLab/actions/runs/42314017761) · [Report privacy](https://github.com/peacefrog5085/RichardLab/actions/runs/42314018503)
