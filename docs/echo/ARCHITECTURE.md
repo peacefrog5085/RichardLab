@@ -24,6 +24,8 @@ The reviewer carries forward Council's concepts of contradiction, unsupported cl
 
 The CLI uses the Python standard library and local files. It validates and renders the packet before publishing the report through a same-directory atomic replacement. An existing report at the chosen path is replaced on success.
 
+Set the top-level packet field `"evidence_kind": "real"` for excerpts from actual sources. Use `"synthetic"` for constructed examples. Packets without this field retain the synthetic label. The report displays the packet author's classification.
+
 ### Optional human review
 
 Pass `--review reports/echo-review.json` to record a local review. The review file contains three fields.

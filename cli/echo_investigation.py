@@ -1,4 +1,4 @@
-"""Build an offline Markdown review from a supplied synthetic evidence packet."""
+"""Build an offline Markdown review from a supplied evidence packet."""
 
 import argparse
 import hashlib
@@ -67,7 +67,9 @@ def match_report(path, packet_digest):
     digest = None
     if (
         len(header) == 8
-        and lines[:4] == [b"# Echo investigation", b"", b"**Synthetic evidence**", b""]
+        and lines[:2] == [b"# Echo investigation", b""]
+        and lines[2] in (b"**Synthetic evidence**", b"**Real evidence**")
+        and lines[3] == b""
         and lines[4].startswith(b"**Question** ")
         and lines[5] == b""
     ):
@@ -81,6 +83,9 @@ def match_report(path, packet_digest):
 def render_report(packet, review=None, *, packet_digest):
     if not isinstance(packet, dict):
         raise ValueError("Packet must be an object")
+    evidence_kind = packet.get("evidence_kind", "synthetic")
+    if evidence_kind not in ("synthetic", "real"):
+        raise ValueError("Evidence kind must be synthetic or real")
     question = require_text(packet.get("question"), "Question")
     sources = {}
     for source in require_items(packet.get("sources"), "Sources"):
@@ -97,7 +102,7 @@ def render_report(packet, review=None, *, packet_digest):
         sources[source_id] = (origin, passages)
 
     lines = [
-        "# Echo investigation", "", "**Synthetic evidence**", "",
+        "# Echo investigation", "", f"**{evidence_kind.capitalize()} evidence**", "",
         f"**Question** {markdown(question)}", "",
         f"**Packet SHA-256** `{packet_digest}`", "",
     ]
@@ -178,7 +183,7 @@ def publish_report(path, report):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("packet", type=Path, help="Local JSON packet with synthetic excerpts")
+    parser.add_argument("packet", type=Path, help="Local JSON packet with evidence excerpts")
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--output", type=Path, help="Local Markdown report path")
     mode.add_argument("--check", action="store_true", help="Validate inputs without writing a report")

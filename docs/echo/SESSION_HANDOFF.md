@@ -163,3 +163,11 @@
 - **VERIFIED** — Ran the CLI offline using excerpts from the two real workflow definitions. Packet validation, draft generation, report generation, digest matching, exact report verification, and generated-report privacy passed. Review validation rejected the blank draft as expected. Both workflow files share one repository origin. See [E-014](EVIDENCE_INDEX.md#e-014--local-investigation-using-real-ci-sources).
 - Outstanding — A human reviewer can fill in `disposition` and `note` in the local draft, validate it with `--check --review`, then generate and verify a reviewed report with the same packet and review. The generated report currently carries the CLI's fixed “Synthetic evidence” label.
 - Files changed and approvals — Updated the handoff and evidence index and created ignored local investigation artifacts. Commit and push require separate approval.
+
+## Evidence label follow-up — ECHO-2026-11-06-05
+
+- Branch and commit — Local `codex/echo-plugin-security` at `131b578` contains the approved CI and real-packet documentation commit. The label fix is in the working tree.
+- Completed — Added explicit packet `evidence_kind` values of `real` and `synthetic`, with synthetic as the default. Report matching accepts both labels. Replayed E-014 with the real classification and verified the corrected report.
+- Local artifacts — `reports/echo-777-real-ci/packet-real.json`, `review-draft-real.json`, and `report-real.md`. The original artifacts were preserved. The new draft binds to the newly classified packet, and human review is pending.
+- **VERIFIED** — Two tests failed before the fix. The full suite then passed 210 tests and 30 subtests. The real packet passed validation, digest matching, exact report verification, and generated-report privacy. Tracked-report privacy and `git diff --check` passed. The security audit returned REVIEW for the dirty tree and absence of an Ollama listener.
+- Next action and approvals — Review the working-tree fix. Commit and push require separate approval.

@@ -39,6 +39,25 @@ class EchoInvestigationTest(unittest.TestCase):
         path.write_text(json.dumps(review), encoding="utf-8")
         return str(path)
 
+    def test_real_packet_report_label_matches_and_verifies(self):
+        self.packet["evidence_kind"] = "real"
+        generated = self.run_cli()
+        self.assertEqual(generated.returncode, 0, generated.stderr)
+        report = self.output.read_text(encoding="utf-8")
+        self.assertIn("**Real evidence**", report.splitlines())
+        self.assertNotIn("**Synthetic evidence**", report.splitlines())
+        for mode in ("--match-report", "--verify-report"):
+            with self.subTest(mode=mode):
+                result = self.run_cli(mode, str(self.output), with_output=False)
+                self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_invalid_evidence_kind_is_rejected(self):
+        self.packet["evidence_kind"] = "unclassified"
+        result = self.run_cli()
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("Evidence kind must be synthetic or real", result.stderr)
+        self.assertFalse(self.output.exists())
+
     def test_report_digest_matches_review_template_with_or_without_review(self):
         template = self.run_cli("--review-template", with_output=False)
         self.assertEqual(template.returncode, 0, template.stderr)
