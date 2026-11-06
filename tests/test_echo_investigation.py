@@ -61,6 +61,41 @@ class EchoInvestigationTest(unittest.TestCase):
                 report = self.output.read_text(encoding="utf-8")
                 self.assertIn(f"**Packet SHA-256** `{digest}`", report)
 
+    def test_match_report_accepts_saved_report_without_modifying_it(self):
+        generated = self.run_cli()
+        self.assertEqual(generated.returncode, 0, generated.stderr)
+        original = self.output.read_bytes()
+        modified = self.output.stat().st_mtime_ns
+        result = self.run_cli("--match-report", str(self.output), with_output=False)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), "Report packet digest matches.")
+        self.assertEqual(self.output.read_bytes(), original)
+        self.assertEqual(self.output.stat().st_mtime_ns, modified)
+        self.assertCountEqual(self.directory.iterdir(), [self.output, self.directory / "packet.json"])
+
+    def test_match_report_rejects_whitespace_change_to_packet(self):
+        generated = self.run_cli()
+        self.assertEqual(generated.returncode, 0, generated.stderr)
+        result = self.run_cli(
+            "--match-report", str(self.output), with_output=False, packet_suffix=b"\n ",
+        )
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("Report packet digest does not match", result.stderr)
+        self.assertEqual(result.stdout, "")
+
+    def test_match_report_requires_digest_in_report_header(self):
+        generated = self.run_cli()
+        self.assertEqual(generated.returncode, 0, generated.stderr)
+        original = self.output.read_text(encoding="utf-8")
+        digest_line = next(line for line in original.splitlines() if line.startswith("**Packet SHA-256**"))
+        for replacement, suffix in (("", ""), ("**Packet SHA-256** `invalid`", ""), ("", digest_line + "\n")):
+            with self.subTest(replacement=replacement, misplaced=bool(suffix)):
+                self.output.write_text(original.replace(digest_line, replacement) + suffix, encoding="utf-8")
+                result = self.run_cli("--match-report", str(self.output), with_output=False)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn("Report header must contain a valid Packet SHA-256", result.stderr)
+                self.assertEqual(result.stdout, "")
+
     def test_matching_review_records_unresolved_disposition(self):
         review = self.write_review()
         result = self.run_cli("--review", review)

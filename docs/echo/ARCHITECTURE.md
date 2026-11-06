@@ -54,7 +54,7 @@ python -m cli.echo_investigation docs/echo/examples/synthetic-investigation.json
 
 Check mode runs the same validation as report generation, including quote matching and review digest verification. It uses local files, leaves the packet and review intact, and creates or modifies no report files. Each claim must include a citations list. Use an explicit empty list for a claim with no evidence citations.
 
-Choose exactly one of `--check`, `--output`, and `--review-template`. Check mode prints `Validation passed.` and exits with code 0 on success. It prints an error to standard error and exits with code 1 for invalid or unreadable inputs. Command-line usage errors exit with code 2.
+Choose exactly one of `--check`, `--output`, `--review-template`, and `--match-report`. Check mode prints `Validation passed.` and exits with code 0 on success. It prints an error to standard error and exits with code 1 for invalid or unreadable inputs. Command-line usage errors exit with code 2.
 
 ### Start a review from a template
 
@@ -63,3 +63,11 @@ python -m cli.echo_investigation docs/echo/examples/synthetic-investigation.json
 ```
 
 The command validates the packet and prints draft JSON with the digest of the exact packet bytes. Copy it into a UTF-8 JSON file, fill in the blank disposition and note, then validate the completed file with `--check --review`. Template mode takes only the packet, writes no files, and emits no JSON if validation fails.
+
+### Match a saved report to its packet
+
+```powershell
+python -m cli.echo_investigation docs/echo/examples/synthetic-investigation.json --match-report reports/echo-investigation.md
+```
+
+Match mode reads the digest from the generated report header and compares it with the exact packet bytes. It writes no files. A match exits with code 0. A mismatch or an unreadable or invalid input exits with code 1. The result covers the packet digest only. Use `--check` for packet and review validation.

@@ -108,3 +108,12 @@
 - Files changed — Updated this handoff and the evidence index locally.
 - Next action — **PROVISIONAL**. Add an offline `--match-report PATH` mode that compares a saved report's packet digest with the SHA-256 of the supplied packet. The result describes the digest match only.
 - Approvals — The previous push approval covered `b9feeed` and `e12490c`. The proposed slice, a new commit, and any push require separate approval.
+
+## Offline report matching follow-up — ECHO-2026-11-05-13
+
+- Project and repository — RichardLab Echo 777 in `peacefrog5085/RichardLab`
+- Branch and commit — Local `codex/echo-plugin-security` at `d35bed4` contains the approved CI documentation commit. The report matching slice is in the working tree.
+- Objective and completed work — Added offline `--match-report PATH` to compare the saved report header digest with the supplied packet bytes. The mode writes no files and reports the digest comparison only.
+- Files changed — CLI, focused tests, architecture notes, and this handoff.
+- **VERIFIED** — Five new cases failed before implementation because the mode was unavailable. The full suite then passed 205 tests and 23 subtests. A generated report with CRLF line endings matched, and tracked-report privacy and `git diff --check` passed. The security audit returned REVIEW for the dirty tree and absence of an Ollama listener.
+- Next action and approvals — Review the working-tree slice. Commit and push require separate approval.

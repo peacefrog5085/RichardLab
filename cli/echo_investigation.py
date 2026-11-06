@@ -59,6 +59,25 @@ def read_review(path, packet_digest):
     )
 
 
+def match_report(path, packet_digest):
+    with path.open("rb") as handle:
+        # The question can expand up to sixfold when escaped as Markdown.
+        header = handle.read(6 * MAX_JSON_BYTES + 1024).split(b"\n", 7)
+    lines = [line.removesuffix(b"\r") for line in header[:7]]
+    digest = None
+    if (
+        len(header) == 8
+        and lines[:4] == [b"# Echo investigation", b"", b"**Synthetic evidence**", b""]
+        and lines[4].startswith(b"**Question** ")
+        and lines[5] == b""
+    ):
+        digest = re.fullmatch(rb"\*\*Packet SHA-256\*\* `([0-9a-fA-F]{64})`", lines[6])
+    if digest is None:
+        raise ValueError("Report header must contain a valid Packet SHA-256")
+    if digest[1].lower() != packet_digest.encode("ascii"):
+        raise ValueError("Report packet digest does not match the supplied packet")
+
+
 def render_report(packet, review=None, *, packet_digest):
     if not isinstance(packet, dict):
         raise ValueError("Packet must be an object")
@@ -164,10 +183,13 @@ def main(argv=None):
     mode.add_argument("--output", type=Path, help="Local Markdown report path")
     mode.add_argument("--check", action="store_true", help="Validate inputs without writing a report")
     mode.add_argument("--review-template", action="store_true", help="Print draft review JSON")
+    mode.add_argument("--match-report", type=Path, help="Compare a saved report's packet digest")
     parser.add_argument("--review", type=Path, help="Local JSON review bound to the packet digest")
     args = parser.parse_args(argv)
     if args.review_template and args.review is not None:
         parser.error("--review is not allowed with argument --review-template")
+    if args.match_report is not None and args.review is not None:
+        parser.error("--review is not allowed with argument --match-report")
     try:
         if args.output is not None:
             if args.output.suffix.lower() != ".md":
@@ -179,6 +201,10 @@ def main(argv=None):
                 raise ValueError("Input and output must be separate files")
         packet, packet_bytes = read_json(args.packet, "Packet")
         packet_digest = hashlib.sha256(packet_bytes).hexdigest()
+        if args.match_report is not None:
+            match_report(args.match_report, packet_digest)
+            print("Report packet digest matches.")
+            return 0
         review = read_review(args.review, packet_digest) if args.review is not None else None
         report = render_report(packet, review, packet_digest=packet_digest)
         if args.output is None:
