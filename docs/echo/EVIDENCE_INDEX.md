@@ -27,3 +27,7 @@
 ## E-007 — Offline review CI
 
 **VERIFIED** — GitHub Actions recorded both push workflows as completed successfully on `codex/echo-plugin-security` at `fa2da357c3c24fef38888e75d7825d5e090b668c`. These results cover that revision. [Integration security](https://github.com/peacefrog5085/RichardLab/actions/runs/42143665134) · [Report privacy](https://github.com/peacefrog5085/RichardLab/actions/runs/42143665066)
+
+## E-008 — Offline check CI
+
+**VERIFIED** — GitHub Actions recorded both push workflows as completed successfully on `codex/echo-plugin-security` at `1fef44addecd5f8d737d011ce80fe8bb403a2d2a`. These results cover that revision. [Integration security](https://github.com/peacefrog5085/RichardLab/actions/runs/42145258774) · [Report privacy](https://github.com/peacefrog5085/RichardLab/actions/runs/42145258765)

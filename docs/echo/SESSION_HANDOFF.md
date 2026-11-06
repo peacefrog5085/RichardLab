@@ -60,3 +60,13 @@
 - **VERIFIED** — The red run reported five failures because the parser required `--output` or rejected `--check`. After implementation, the focused suite passed 10 tests and five subtests. The full suite passed 195 tests and five subtests. The synthetic check and tracked-report privacy check passed. The security audit returned REVIEW for the dirty tree and absence of an Ollama listener.
 - **VERIFIED before the approved local commit** — The final slice includes more specific citation errors and checks for preserving inputs and existing reports without network access. The full suite passed 197 tests and 13 subtests. Tracked-report privacy and `git diff --check` passed.
 - Next action and approvals — The operator approved the local check-slice commit. Pushing either local commit requires separate approval.
+
+## Offline check push and CI follow-up — ECHO-2026-11-05-08
+
+- Project and repository — RichardLab Echo 777 in `peacefrog5085/RichardLab`
+- Objective — Record CI for the approved push of the offline check slice.
+- Branch and commit — Local HEAD and the verified remote `codex/echo-plugin-security` ref point to `1fef44addecd5f8d737d011ce80fe8bb403a2d2a`. The generated report and `.venv` stayed local.
+- **VERIFIED** — Integration security and Report privacy both completed successfully for that push. See [E-008](EVIDENCE_INDEX.md#e-008--offline-check-ci). No local tests were rerun for this documentation update.
+- Files changed — Updated this handoff and the evidence index locally.
+- Next action — **PROVISIONAL**. Add an offline `--review-template` mode that validates a packet and prints draft review JSON to standard output. It would prefill the packet digest and leave disposition and note blank for a human to complete.
+- Approvals — The previous push approval covered `6e259c6` and `1fef44a`. The proposed slice, a new commit, and any push require separate approval.
