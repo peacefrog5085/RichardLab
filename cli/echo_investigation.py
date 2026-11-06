@@ -121,7 +121,7 @@ def read_local_git(*arguments, error):
 
 def check_pinned_sources(packet):
     # The renderer has already validated the packet, including paths and ranges.
-    for source in packet["sources"]:
+    for source_number, source in enumerate(packet["sources"], 1):
         commit = source.get("commit")
         if not isinstance(commit, str) or not re.fullmatch(r"(?:[0-9a-fA-F]{40}|[0-9a-fA-F]{64})", commit):
             raise ValueError("Source commit must be a full Git object ID")
@@ -144,10 +144,13 @@ def check_pinned_sources(packet):
             lines = blob.decode("utf-8").replace("\r\n", "\n").removesuffix("\n").split("\n")
         except UnicodeDecodeError:
             raise ValueError("Pinned Git source file must be UTF-8") from None
-        for passage_id, passage in passages.items():
+        for passage_number, (passage_id, passage) in enumerate(passages.items(), 1):
             start, end = ranges[passage_id]
             if end > len(lines) or passage.replace("\r\n", "\n") not in "\n".join(lines[start - 1:end]):
-                raise ValueError("Passage does not match pinned Git lines")
+                raise ValueError(
+                    "Passage does not match pinned Git lines "
+                    f"(source {source_number}, passage {passage_number}, lines {start}-{end})"
+                )
 
 
 def render_report(packet, review=None, *, packet_digest):

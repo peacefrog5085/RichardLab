@@ -226,3 +226,10 @@
 - Files changed — Updated the handoff and evidence index. Generated reports, local packets, review drafts, and `.venv` stayed local.
 - Next action — **PROVISIONAL**. When `--check-sources` finds a mismatch, report the one-based source and passage positions in packet order and the requested line range. Use only those numbers so the diagnostic can help locate the failure without exposing source paths, IDs, or excerpts.
 - Approvals — The previous push approval covered `77be29c` and `2f5fa9a`. The proposed slice, a new commit, and any push require separate approval.
+
+## Source mismatch diagnostic follow-up — ECHO-2026-11-06-13
+
+- Branch and commit — Local `codex/echo-plugin-security` at `4acb6f7` contains the approved CI documentation commit. The diagnostic slice is in the working tree.
+- Completed — `--check-sources` mismatch errors report one-based source and passage positions in packet order and the requested inclusive line range. The message contains no paths, IDs, or excerpts. The range uses an ASCII hyphen for Windows stderr compatibility.
+- **VERIFIED** — Two subtests failed before implementation because the numeric location was missing. The full suite then passed 220 tests and 44 subtests. Tracked-report privacy and `git diff --check` passed. The security audit returned REVIEW for the dirty tree and absence of an Ollama listener.
+- Next action and approvals — Review the working-tree slice. Commit and push require separate approval.

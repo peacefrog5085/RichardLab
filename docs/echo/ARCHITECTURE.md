@@ -68,6 +68,8 @@ Choose exactly one of `--check`, `--check-sources`, `--output`, `--review-templa
 
 From the local Git checkout, run `python -m cli.echo_investigation PACKET.json --check-sources`. Every source needs a full Git commit ID in `commit`, a repository-relative `path`, and a `line_ranges` entry for every passage. The check compares each passage as an exact substring of its inclusive line range, normalizing CRLF to LF. It reads UTF-8 Git blobs up to 1 MiB, uses only objects already available locally, and writes no report. Use ordinary `--check` for packets without complete Git locators.
 
+A passage mismatch reports the one-based source and passage positions in packet order and the requested line range. The diagnostic contains only those numbers and a fixed message.
+
 ### Start a review from a template
 
 ```powershell

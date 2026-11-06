@@ -69,6 +69,29 @@ class EchoInvestigationTest(unittest.TestCase):
         self.assertIn("Passage does not match pinned Git lines", result.stderr)
         self.assertEqual(result.stdout, "")
 
+    def test_check_sources_mismatch_reports_only_numeric_location(self):
+        source = self.use_pinned_workflow_excerpt()
+        second = {
+            **source,
+            "id": "private-source-id",
+            "passages": {**source["passages"], "private-passage-id": "private excerpt"},
+        }
+        self.packet["sources"].append(second)
+        for start, end in ((1, 2), (999, 1000)):
+            with self.subTest(start=start, end=end):
+                second["line_ranges"] = {
+                    **source["line_ranges"],
+                    "private-passage-id": [start, end],
+                }
+                result = self.run_cli("--check-sources", with_output=False)
+                self.assertEqual(result.returncode, 1)
+                self.assertEqual(result.stdout, "")
+                self.assertEqual(
+                    result.stderr.strip(),
+                    f"Echo investigation: Passage does not match pinned Git lines "
+                    f"(source 2, passage 2, lines {start}-{end})",
+                )
+
     def test_check_sources_rejects_unavailable_or_unpinned_commit(self):
         source = self.use_pinned_workflow_excerpt()
         for commit, message in (("f" * 40, "Pinned Git commit is unavailable"),
