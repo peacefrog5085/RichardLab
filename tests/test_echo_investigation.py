@@ -50,6 +50,34 @@ class EchoInvestigationTest(unittest.TestCase):
         self.assertIn("Conflicting evidence", report)
         self.assertNotIn("Human review: pending", report)
 
+    def test_review_template_emits_digest_and_blank_fields_without_writing(self):
+        result = self.run_cli("--review-template", with_output=False)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        packet = self.directory / "packet.json"
+        self.assertEqual(json.loads(result.stdout), {
+            "packet_sha256": hashlib.sha256(packet.read_bytes()).hexdigest(),
+            "disposition": "",
+            "note": "",
+        })
+        self.assertCountEqual(self.directory.iterdir(), [packet])
+
+    def test_review_template_rejects_invalid_citation_without_emitting_json(self):
+        self.packet["claims"][0]["citations"][0]["quote"] = "fabricated quote"
+        result = self.run_cli("--review-template", with_output=False)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("Quote mismatch", result.stderr)
+        self.assertEqual(result.stdout, "")
+        self.assertFalse(self.output.exists())
+
+    def test_review_template_rejects_other_modes_and_existing_review(self):
+        for args in (("--check",), ("--output", str(self.output)), ("--review", self.write_review())):
+            with self.subTest(args=args):
+                result = self.run_cli("--review-template", *args, with_output=False)
+                self.assertEqual(result.returncode, 2)
+                self.assertIn("not allowed with argument", result.stderr)
+                self.assertEqual(result.stdout, "")
+                self.assertFalse(self.output.exists())
+
     def test_check_accepts_valid_packet_and_optional_review_without_writing(self):
         review = self.write_review()
         for review_args in ((), ("--review", review)):

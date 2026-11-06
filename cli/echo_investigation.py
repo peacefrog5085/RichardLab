@@ -162,8 +162,11 @@ def main(argv=None):
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--output", type=Path, help="Local Markdown report path")
     mode.add_argument("--check", action="store_true", help="Validate inputs without writing a report")
+    mode.add_argument("--review-template", action="store_true", help="Print draft review JSON")
     parser.add_argument("--review", type=Path, help="Local JSON review bound to the packet digest")
     args = parser.parse_args(argv)
+    if args.review_template and args.review is not None:
+        parser.error("--review is not allowed with argument --review-template")
     try:
         if args.output is not None:
             if args.output.suffix.lower() != ".md":
@@ -176,16 +179,23 @@ def main(argv=None):
         packet, packet_bytes = read_json(args.packet, "Packet")
         review = read_review(args.review, packet_bytes) if args.review is not None else None
         report = render_report(packet, review)
-        if args.check:
+        if args.output is None:
             report.encode("utf-8")
-            print("Validation passed.")
+            if args.review_template:
+                print(json.dumps({
+                    "packet_sha256": hashlib.sha256(packet_bytes).hexdigest(),
+                    "disposition": "",
+                    "note": "",
+                }, indent=2))
+            else:
+                print("Validation passed.")
         else:
             publish_report(args.output, report)
     except UnicodeError:
         print("Echo investigation: Packet or review text cannot be encoded as UTF-8.", file=sys.stderr)
         return 1
     except OSError:
-        action = "read an input" if args.check else "read an input or publish the report"
+        action = "read an input" if args.output is None else "read an input or publish the report"
         print(f"Echo investigation failed to {action}.", file=sys.stderr)
         return 1
     except ValueError as exc:

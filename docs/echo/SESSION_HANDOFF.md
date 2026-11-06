@@ -70,3 +70,12 @@
 - Files changed — Updated this handoff and the evidence index locally.
 - Next action — **PROVISIONAL**. Add an offline `--review-template` mode that validates a packet and prints draft review JSON to standard output. It would prefill the packet digest and leave disposition and note blank for a human to complete.
 - Approvals — The previous push approval covered `6e259c6` and `1fef44a`. The proposed slice, a new commit, and any push require separate approval.
+
+## Offline review template follow-up — ECHO-2026-11-05-09
+
+- Project and repository — RichardLab Echo 777 in `peacefrog5085/RichardLab`
+- Branch and commit — Local `codex/echo-plugin-security` at `a861afe` contains the approved CI documentation commit. The template slice is in the working tree.
+- Objective and completed work — Added offline `--review-template`. It validates the packet, prints JSON with its exact SHA-256 digest and blank review fields, and writes no files.
+- Files changed — CLI, focused tests, architecture notes, and this handoff.
+- **VERIFIED** — The red run reported five failures because the parser did not recognize `--review-template`. The full suite then passed 200 tests and 16 subtests. A completed template passed `--check --review`. Tracked-report privacy and `git diff --check` passed. The security audit returned REVIEW for the dirty tree and absence of an Ollama listener.
+- Next action and approvals — Review the working-tree slice. Commit and push require separate approval.
