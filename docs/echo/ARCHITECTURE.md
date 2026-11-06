@@ -95,3 +95,26 @@ python -m cli.echo_investigation docs/echo/examples/synthetic-investigation.json
 For a report with a recorded review, supply the review with `--review reports/echo-review.json`. Verify mode validates the inputs, regenerates Markdown in memory, and compares the full UTF-8 bytes, including line endings. It writes no files. An exact match exits with code 0. A difference or an invalid or unreadable input exits with code 1.
 
 A mismatch reports the first differing byte position, counting from 1. If one report ends after a matching prefix, the position is the first byte beyond that prefix. The diagnostic contains no report text.
+
+## Local Echo status API
+
+The status API is opt-in. Set `RICHARDLAB_ECHO_STATUS_TOKEN` in the local
+process environment to a dedicated, randomly generated bearer token with at
+least 32 characters, then run `python -m cloud_service.echo_local` from the
+checkout with Flask installed. The launcher listens on `127.0.0.1:8081`.
+It serves a separate Flask app whose only route is
+`GET /api/v1/echo/status`. Send the credential in the
+`Authorization: Bearer <token>` header. Startup fails if the credential is
+missing or invalid. The default cloud app does not register this route.
+
+The response identifies the service, API version, status API liveness, and
+the `echo.status.read` capability. It omits application version and historical
+test results until trusted provenance is available. An invalid or missing
+credential returns `401`. If required status metadata becomes unavailable,
+an authenticated request returns `503` with a generic error. Status responses
+and these errors use `Cache-Control: no-store`.
+
+The status service runs in memory and never calls the investigation CLI or
+the lab collectors. The route emits a structured access event to the process
+log with a generated request ID, UTC timestamp, operation, and outcome.
+Remote access requires separate operator approval.
