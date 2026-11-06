@@ -1,0 +1,30 @@
+{
+  "question": "Did the test beacon flash?",
+  "sources": [
+    {
+      "id": "S1",
+      "origin": "trial-log",
+      "passages": {"P1": "The beacon flashed during the trial."}
+    },
+    {
+      "id": "S2",
+      "origin": "trial-log",
+      "passages": {"P1": "The beacon flashed during the trial."}
+    },
+    {
+      "id": "S3",
+      "origin": "observer-log",
+      "passages": {"P1": "The beacon stayed dark during the trial."}
+    }
+  ],
+  "claims": [
+    {
+      "text": "The beacon flashed during the trial.",
+      "citations": [
+        {"source": "S1", "passage": "P1", "quote": "The beacon flashed during the trial.", "relation": "supports"},
+        {"source": "S2", "passage": "P1", "quote": "The beacon flashed during the trial.", "relation": "supports"},
+        {"source": "S3", "passage": "P1", "quote": "The beacon stayed dark during the trial.", "relation": "contradicts"}
+      ]
+    }
+  ]
+}

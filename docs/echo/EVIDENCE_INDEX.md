@@ -1,0 +1,21 @@
+# Evidence index
+
+## E-001 — Upstream base
+
+**VERIFIED** — Read-only Git remote ref lookup and GitHub comparison. [Echo commit](https://github.com/peacefrog5085/RichardLab/commit/7e9ae40258ac65735fccd97f652115aca8d2fd7e) and [branch comparison](https://github.com/peacefrog5085/RichardLab/compare/master...codex/echo-plugin-security).
+
+## E-002 — Upstream CI
+
+**VERIFIED** — [Integration security](https://github.com/peacefrog5085/RichardLab/actions/runs/39053754261) and [Report privacy](https://github.com/peacefrog5085/RichardLab/actions/runs/39053754251) succeeded on E-001. These runs cover the upstream commit.
+
+## E-003 — October 23 demo
+
+**VERIFIED** — Discovery observed an unborn `codex/echo-demo` branch with untracked files and no configured remote. Its adjacent artifact `RichardLab_Echo_Verification_Report.md`, dated 2026-10-23, records 189 passed in 17.81 seconds. This establishes the reported result. The exact revision behind that run remains **PROVISIONAL**.
+
+## E-004 — Earlier pilot
+
+**VERIFIED** — [Published GitHub pilot](https://github.com/peacefrog5085/RichardLab/commit/7c91f6b54d2067b3a8ff4a2338295e0601cfced9) and [master invocation fix](https://github.com/peacefrog5085/RichardLab/commit/4b0bc7977219b24b95ba79991b9ac6c35b5c811d). The historical local pilot checkout was clean at `a82e1a38de8cd4d8f7309691919ac91c292ed36e`. Its relationship to the published refs remains **PROVISIONAL** because GitHub did not resolve the local SHA.
+
+## E-005 — Historical memory
+
+**VERIFIED** — The local October 8 artifact `docs/RICHARDLAB_MIGRATION_REPORT.md` describes Basic Memory `main` and its historical archive map. Current service state is **PROVISIONAL**. Use the original archive records if separately authorized to inspect them.
