@@ -40,3 +40,13 @@
 - Files changed — CLI, focused tests, architecture notes, and this handoff.
 - **VERIFIED** — Three new tests failed before implementation because `--review` was unrecognized. The focused suite then passed six tests and three subtests. The full suite passed 191 tests and three subtests. Tracked-report and reviewed-sample privacy checks passed. The security audit returned REVIEW for the dirty tree and the absence of an Ollama listener.
 - Next action and approvals — Review the working-tree slice. Commit and push require separate approval.
+
+## Offline review push and CI follow-up — ECHO-2026-11-05-06
+
+- Project and repository — RichardLab Echo 777 in `peacefrog5085/RichardLab`
+- Objective — Verify and record CI for the approved push of the offline review slice.
+- Branch and commit — Local HEAD and the verified remote `codex/echo-plugin-security` ref point to `fa2da357c3c24fef38888e75d7825d5e090b668c`. The generated report and `.venv` stayed local.
+- **VERIFIED** — Integration security and Report privacy both completed successfully for that push. See [E-007](EVIDENCE_INDEX.md#e-007--offline-review-ci). No local tests were rerun for this documentation update.
+- Files changed — Updated this handoff and the evidence index locally.
+- Next action — **PROVISIONAL**. Add a local `--check` mode that runs the existing packet and optional review validation without writing a report. Use it to catch stale reviews before selecting an output path.
+- Approvals — The previous push approval covered `6bfdf70` and `fa2da35`. The proposed slice, a new commit, and any push require separate approval.
