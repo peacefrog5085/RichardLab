@@ -79,3 +79,13 @@
 - Files changed — CLI, focused tests, architecture notes, and this handoff.
 - **VERIFIED** — The red run reported five failures because the parser did not recognize `--review-template`. The full suite then passed 200 tests and 16 subtests. A completed template passed `--check --review`. Tracked-report privacy and `git diff --check` passed. The security audit returned REVIEW for the dirty tree and absence of an Ollama listener.
 - Next action and approvals — Review the working-tree slice. Commit and push require separate approval.
+
+## Offline review template push and CI follow-up — ECHO-2026-11-05-10
+
+- Project and repository — RichardLab Echo 777 in `peacefrog5085/RichardLab`
+- Objective — Record CI for the approved push of the offline review template slice.
+- Branch and commit — Local HEAD and the verified remote `codex/echo-plugin-security` ref point to `b3beeb6cde9a37c014f7fd063aa323ead136bced`. The generated report and `.venv` stayed local.
+- **VERIFIED** — Integration security and Report privacy both completed successfully for that push. See [E-009](EVIDENCE_INDEX.md#e-009--offline-review-template-ci). No local tests were rerun for this documentation update.
+- Files changed — Updated this handoff and the evidence index locally.
+- Next action — **PROVISIONAL**. Include the exact packet SHA-256 in generated Markdown reports so a saved report can be matched to its source packet and review template offline.
+- Approvals — The previous push approval covered `a861afe` and `b3beeb6`. The proposed slice, a new commit, and any push require separate approval.
