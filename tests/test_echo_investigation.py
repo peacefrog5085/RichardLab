@@ -61,6 +61,39 @@ class EchoInvestigationTest(unittest.TestCase):
                 report = self.output.read_text(encoding="utf-8")
                 self.assertIn(f"**Packet SHA-256** `{digest}`", report)
 
+    def test_verify_report_reproduces_pending_and_reviewed_reports_without_writing(self):
+        review = self.write_review()
+        for arguments in ((), ("--review", review)):
+            with self.subTest(reviewed=bool(arguments)):
+                generated = self.run_cli(*arguments)
+                self.assertEqual(generated.returncode, 0, generated.stderr)
+                original = self.output.read_bytes()
+                modified = self.output.stat().st_mtime_ns
+                result = self.run_cli(
+                    "--verify-report", str(self.output), *arguments, with_output=False,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(result.stdout.strip(), "Saved report matches regenerated Markdown.")
+                self.assertEqual(self.output.read_bytes(), original)
+                self.assertEqual(self.output.stat().st_mtime_ns, modified)
+                if arguments:
+                    pending = self.run_cli("--verify-report", str(self.output), with_output=False)
+                    self.assertEqual(pending.returncode, 1)
+                    self.assertIn("Saved report does not match regenerated Markdown", pending.stderr)
+
+    def test_verify_report_rejects_body_edit_even_when_packet_digest_matches(self):
+        generated = self.run_cli()
+        self.assertEqual(generated.returncode, 0, generated.stderr)
+        edited = self.output.read_bytes() + b"\nAdded after generation.\n"
+        self.output.write_bytes(edited)
+        result = self.run_cli("--verify-report", str(self.output), with_output=False)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("Saved report does not match regenerated Markdown", result.stderr)
+        self.assertEqual(result.stdout, "")
+        self.assertEqual(self.output.read_bytes(), edited)
+        matched = self.run_cli("--match-report", str(self.output), with_output=False)
+        self.assertEqual(matched.returncode, 0, matched.stderr)
+
     def test_match_report_accepts_saved_report_without_modifying_it(self):
         generated = self.run_cli()
         self.assertEqual(generated.returncode, 0, generated.stderr)

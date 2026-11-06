@@ -127,3 +127,12 @@
 - Files changed — Updated this handoff and the evidence index locally.
 - Next action — **PROVISIONAL**. Add offline `--verify-report PATH` to regenerate Markdown in memory from the packet and optional review, then compare it with the saved report. It would catch edits to the report body even when the packet digest still matches.
 - Approvals — The previous push approval covered `d35bed4` and `de8441e`. The proposed slice, a new commit, and any push require separate approval.
+
+## Offline report verification follow-up — ECHO-2026-11-06-01
+
+- Project and repository — RichardLab Echo 777 in `peacefrog5085/RichardLab`
+- Branch and commit — Local `codex/echo-plugin-security` at `d5eebb9` contains the approved CI documentation commit. The report verification slice is in the working tree.
+- Completed — Added offline `--verify-report PATH` to validate the packet and optional review, regenerate Markdown in memory, and compare the exact saved bytes without writing files.
+- Files changed — CLI, focused tests, architecture notes, and this handoff.
+- **VERIFIED** — Three new cases failed before implementation because the mode was unavailable. The full suite then passed 207 tests and 25 subtests. Tracked-report privacy and `git diff --check` passed. The security audit returned REVIEW for the dirty tree and absence of an Ollama listener.
+- Next action and approvals — Review the working-tree slice. Commit and push require separate approval.

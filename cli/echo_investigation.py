@@ -184,6 +184,7 @@ def main(argv=None):
     mode.add_argument("--check", action="store_true", help="Validate inputs without writing a report")
     mode.add_argument("--review-template", action="store_true", help="Print draft review JSON")
     mode.add_argument("--match-report", type=Path, help="Compare a saved report's packet digest")
+    mode.add_argument("--verify-report", type=Path, help="Compare a saved report with regenerated Markdown")
     parser.add_argument("--review", type=Path, help="Local JSON review bound to the packet digest")
     args = parser.parse_args(argv)
     if args.review_template and args.review is not None:
@@ -208,8 +209,13 @@ def main(argv=None):
         review = read_review(args.review, packet_digest) if args.review is not None else None
         report = render_report(packet, review, packet_digest=packet_digest)
         if args.output is None:
-            report.encode("utf-8")
-            if args.review_template:
+            report_bytes = report.encode("utf-8")
+            if args.verify_report is not None:
+                with args.verify_report.open("rb") as handle:
+                    if handle.read(len(report_bytes) + 1) != report_bytes:
+                        raise ValueError("Saved report does not match regenerated Markdown")
+                print("Saved report matches regenerated Markdown.")
+            elif args.review_template:
                 print(json.dumps({
                     "packet_sha256": packet_digest,
                     "disposition": "",

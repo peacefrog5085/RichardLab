@@ -54,7 +54,7 @@ python -m cli.echo_investigation docs/echo/examples/synthetic-investigation.json
 
 Check mode runs the same validation as report generation, including quote matching and review digest verification. It uses local files, leaves the packet and review intact, and creates or modifies no report files. Each claim must include a citations list. Use an explicit empty list for a claim with no evidence citations.
 
-Choose exactly one of `--check`, `--output`, `--review-template`, and `--match-report`. Check mode prints `Validation passed.` and exits with code 0 on success. It prints an error to standard error and exits with code 1 for invalid or unreadable inputs. Command-line usage errors exit with code 2.
+Choose exactly one of `--check`, `--output`, `--review-template`, `--match-report`, and `--verify-report`. Check mode prints `Validation passed.` and exits with code 0 on success. It prints an error to standard error and exits with code 1 for invalid or unreadable inputs. Command-line usage errors exit with code 2.
 
 ### Start a review from a template
 
@@ -71,3 +71,11 @@ python -m cli.echo_investigation docs/echo/examples/synthetic-investigation.json
 ```
 
 Match mode reads the digest from the generated report header and compares it with the exact packet bytes. It writes no files. A match exits with code 0. A mismatch or an unreadable or invalid input exits with code 1. The result covers the packet digest only. Use `--check` for packet and review validation.
+
+### Verify a saved report against regenerated Markdown
+
+```powershell
+python -m cli.echo_investigation docs/echo/examples/synthetic-investigation.json --verify-report reports/echo-investigation.md
+```
+
+For a report with a recorded review, supply the review with `--review reports/echo-review.json`. Verify mode validates the inputs, regenerates Markdown in memory, and compares the full UTF-8 bytes, including line endings. It writes no files. An exact match exits with code 0. A difference or an invalid or unreadable input exits with code 1.
