@@ -171,3 +171,11 @@
 - Local artifacts — `reports/echo-777-real-ci/packet-real.json`, `review-draft-real.json`, and `report-real.md`. The original artifacts were preserved. The new draft binds to the newly classified packet, and human review is pending.
 - **VERIFIED** — Two tests failed before the fix. The full suite then passed 210 tests and 30 subtests. The real packet passed validation, digest matching, exact report verification, and generated-report privacy. Tracked-report privacy and `git diff --check` passed. The security audit returned REVIEW for the dirty tree and absence of an Ollama listener.
 - Next action and approvals — Review the working-tree fix. Commit and push require separate approval.
+
+## Real-evidence label push and CI follow-up — ECHO-2026-11-06-06
+
+- Branch and commit — Local HEAD and the verified remote `codex/echo-plugin-security` ref point to `c8bb8b03ead558c0e03405b65d2560628f55f295`.
+- **VERIFIED** — Integration security and Report privacy both passed for that push. See [E-015](EVIDENCE_INDEX.md#e-015--real-evidence-label-ci). No local tests were rerun for this documentation update.
+- Files changed — Updated the handoff and evidence index. Generated reports, local packets, review drafts, and `.venv` stayed local.
+- Next action — **PROVISIONAL**. Render optional repository-relative source paths in report citations. The real CI packet already records a path for each workflow, so reviewers could distinguish files that share the same origin. Paths would be rendered as metadata without opening files.
+- Approvals — The previous push approval covered `131b578` and `c8bb8b0`. The proposed slice, a new commit, and any push require separate approval.
