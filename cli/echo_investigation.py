@@ -1,6 +1,7 @@
 """Build an offline Markdown review from a supplied synthetic evidence packet."""
 
 import argparse
+import hashlib
 import html
 import json
 import os
@@ -10,7 +11,7 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 
 
-MAX_PACKET_BYTES = 64 * 1024
+MAX_JSON_BYTES = 64 * 1024
 
 
 def require_text(value, field):
@@ -32,7 +33,33 @@ def markdown(value):
     return re.sub(r"([\\\x60*_\[\]~!])", r"\\\1", html.escape(" ".join(value.split())))
 
 
-def render_report(packet):
+def read_json(path, label):
+    with path.open("rb") as handle:
+        data = handle.read(MAX_JSON_BYTES + 1)
+    if len(data) > MAX_JSON_BYTES:
+        raise ValueError(f"{label} exceeds 64 KiB")
+    try:
+        return json.loads(data.decode("utf-8")), data
+    except (ValueError, RecursionError):
+        raise ValueError(f"{label} must be valid UTF-8 JSON") from None
+
+
+def read_review(path, packet_bytes):
+    review, _ = read_json(path, "Review")
+    if not isinstance(review, dict):
+        raise ValueError("Review must be an object")
+    digest = review.get("packet_sha256")
+    if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-fA-F]{64}", digest):
+        raise ValueError("Review packet_sha256 must be a 64-digit hexadecimal digest")
+    if digest.lower() != hashlib.sha256(packet_bytes).hexdigest():
+        raise ValueError("Review digest does not match packet")
+    return (
+        require_text(review.get("disposition"), "Review disposition"),
+        require_text(review.get("note"), "Review note"),
+    )
+
+
+def render_report(packet, review=None):
     if not isinstance(packet, dict):
         raise ValueError("Packet must be an object")
     question = require_text(packet.get("question"), "Question")
@@ -53,10 +80,20 @@ def render_report(packet):
     lines = [
         "# Echo investigation", "", "**Synthetic evidence**", "",
         f"**Question** {markdown(question)}", "",
-        "**Human review: pending**", "",
+    ]
+    if review is None:
+        lines.extend(["**Human review: pending**", ""])
+    else:
+        disposition, note = review
+        lines.extend([
+            "**Human review: recorded**", "",
+            f"**Reviewer disposition** {markdown(disposition)}",
+            f"**Reviewer note** {markdown(note)}", "",
+        ])
+    lines.extend([
         "Citation relationships and origins are supplied by the packet author.",
         "",
-    ]
+    ])
     for number, claim in enumerate(require_items(packet.get("claims"), "Claims"), 1):
         claim_text = require_text(claim.get("text"), "Claim")
         citations = claim.get("citations")
@@ -119,23 +156,21 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("packet", type=Path, help="Local JSON packet with synthetic excerpts")
     parser.add_argument("--output", type=Path, required=True, help="Local Markdown report path")
+    parser.add_argument("--review", type=Path, help="Local JSON review bound to the packet digest")
     args = parser.parse_args(argv)
     try:
         if args.output.suffix.lower() != ".md":
             raise ValueError("Output must have a .md extension")
-        if args.packet.resolve() == args.output.resolve():
+        output_path = args.output.resolve()
+        if args.packet.resolve() == output_path or (
+            args.review is not None and args.review.resolve() == output_path
+        ):
             raise ValueError("Input and output must be separate files")
-        with args.packet.open("rb") as handle:
-            data = handle.read(MAX_PACKET_BYTES + 1)
-        if len(data) > MAX_PACKET_BYTES:
-            raise ValueError("Packet exceeds 64 KiB")
-        try:
-            packet = json.loads(data.decode("utf-8"))
-        except (ValueError, RecursionError):
-            raise ValueError("Packet must be valid UTF-8 JSON") from None
-        publish_report(args.output, render_report(packet))
+        packet, packet_bytes = read_json(args.packet, "Packet")
+        review = read_review(args.review, packet_bytes) if args.review is not None else None
+        publish_report(args.output, render_report(packet, review))
     except (OSError, UnicodeError):
-        print("Echo investigation failed to read the packet or publish the report.", file=sys.stderr)
+        print("Echo investigation failed to read an input or publish the report.", file=sys.stderr)
         return 1
     except ValueError as exc:
         print(f"Echo investigation: {exc}", file=sys.stderr)

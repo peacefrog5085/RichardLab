@@ -23,3 +23,17 @@ The UTF-8 JSON packet supplies one question, sources with origin labels and pass
 The reviewer carries forward Council's concepts of contradiction, unsupported claims, and evidence needed. It groups repeated origin labels, preserves competing evidence, and leaves human review pending. The packet author supplies the relationships and origins. An exact quote match checks textual provenance within the packet. Human review evaluates whether the citation supports the claim and whether origins are independent.
 
 The CLI uses the Python standard library and local files. It validates and renders the packet before publishing the report through a same-directory atomic replacement. An existing report at the chosen path is replaced on success.
+
+### Optional human review
+
+Pass `--review reports/echo-review.json` to record a local review. The review file contains three fields.
+
+```json
+{
+  "packet_sha256": "<64 hexadecimal digits from Get-FileHash>",
+  "disposition": "Unresolved",
+  "note": "Both accounts remain plausible."
+}
+```
+
+On PowerShell, get the digest with `(Get-FileHash -Algorithm SHA256 docs/echo/examples/synthetic-investigation.json).Hash`. The digest covers the exact file bytes, including whitespace and line endings. A missing review argument leaves human review pending. A supplied review with an invalid or stale digest fails before publishing. The recorded disposition and note describe the reviewer's judgment, and the report still shows conflicting evidence. The digest provides packet matching only.

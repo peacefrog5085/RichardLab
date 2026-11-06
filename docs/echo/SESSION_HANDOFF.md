@@ -30,3 +30,13 @@
 - Files changed — Updated this handoff and the evidence index locally. The generated report and `.venv` remain ignored local artifacts.
 - Next action — **PROVISIONAL**. Add an optional local human-review record tied to the exact investigation packet. A valid review could record that conflicting evidence remains unresolved. Missing review stays pending. Stale review fails before report publication.
 - Approvals — The earlier commit and push approvals covered `4b3a893`. The proposed slice and any new commit or push require separate approval.
+
+## Offline review follow-up — ECHO-2026-11-05-05
+
+- Project and repository — RichardLab Echo 777 in `peacefrog5085/RichardLab`
+- Branch and commit — Local `codex/echo-plugin-security` at `6bfdf70` contains the approved CI documentation commit. The review slice is in the working tree.
+- Objective — Add an optional offline review tied to the exact packet bytes.
+- Completed — Added `--review` with SHA-256 matching and a recorded disposition and note. Missing review stays pending. Invalid or stale review fails before report publication.
+- Files changed — CLI, focused tests, architecture notes, and this handoff.
+- **VERIFIED** — Three new tests failed before implementation because `--review` was unrecognized. The focused suite then passed six tests and three subtests. The full suite passed 191 tests and three subtests. Tracked-report and reviewed-sample privacy checks passed. The security audit returned REVIEW for the dirty tree and the absence of an Ollama listener.
+- Next action and approvals — Review the working-tree slice. Commit and push require separate approval.
