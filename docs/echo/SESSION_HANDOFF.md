@@ -89,3 +89,12 @@
 - Files changed — Updated this handoff and the evidence index locally.
 - Next action — **PROVISIONAL**. Include the exact packet SHA-256 in generated Markdown reports so a saved report can be matched to its source packet and review template offline.
 - Approvals — The previous push approval covered `a861afe` and `b3beeb6`. The proposed slice, a new commit, and any push require separate approval.
+
+## Report packet digest follow-up — ECHO-2026-11-05-11
+
+- Project and repository — RichardLab Echo 777 in `peacefrog5085/RichardLab`
+- Branch and commit — Local `codex/echo-plugin-security` at `b9feeed` contains the approved CI documentation commit. The report digest slice is in the working tree.
+- Objective and completed work — Added the exact packet SHA-256 to generated Markdown for both pending and recorded reviews. The CLI computes the digest once and uses it for the report, review matching, and review template.
+- Files changed — CLI, focused tests, architecture notes, and this handoff.
+- **VERIFIED** — The red run reported four failing subtests for the missing digest field. The full suite then passed 202 tests and 20 subtests. Tracked-report privacy, temporary sample report privacy and digest checks, and `git diff --check` passed. The security audit returned REVIEW for the dirty tree and absence of an Ollama listener.
+- Next action and approvals — Review the working-tree slice. Commit and push require separate approval.

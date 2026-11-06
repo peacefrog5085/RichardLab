@@ -38,6 +38,8 @@ Pass `--review reports/echo-review.json` to record a local review. The review fi
 
 On PowerShell, get the digest with `(Get-FileHash -Algorithm SHA256 docs/echo/examples/synthetic-investigation.json).Hash`. The digest covers the exact file bytes, including whitespace and line endings. A missing review argument leaves human review pending. A supplied review with an invalid or stale digest fails before publishing. The recorded disposition and note describe the reviewer's judgment, and the report still shows conflicting evidence. The digest provides packet matching only.
 
+Every generated Markdown report includes a **Packet SHA-256** field. It matches the review template's `packet_sha256` for the same packet bytes, whether human review is pending or recorded.
+
 ### Check inputs before publishing
 
 ```powershell

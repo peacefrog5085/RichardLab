@@ -44,14 +44,14 @@ def read_json(path, label):
         raise ValueError(f"{label} must be valid UTF-8 JSON") from None
 
 
-def read_review(path, packet_bytes):
+def read_review(path, packet_digest):
     review, _ = read_json(path, "Review")
     if not isinstance(review, dict):
         raise ValueError("Review must be an object")
     digest = review.get("packet_sha256")
     if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-fA-F]{64}", digest):
         raise ValueError("Review packet_sha256 must be a 64-digit hexadecimal digest")
-    if digest.lower() != hashlib.sha256(packet_bytes).hexdigest():
+    if digest.lower() != packet_digest:
         raise ValueError("Review digest does not match packet")
     return (
         require_text(review.get("disposition"), "Review disposition"),
@@ -59,7 +59,7 @@ def read_review(path, packet_bytes):
     )
 
 
-def render_report(packet, review=None):
+def render_report(packet, review=None, *, packet_digest):
     if not isinstance(packet, dict):
         raise ValueError("Packet must be an object")
     question = require_text(packet.get("question"), "Question")
@@ -80,6 +80,7 @@ def render_report(packet, review=None):
     lines = [
         "# Echo investigation", "", "**Synthetic evidence**", "",
         f"**Question** {markdown(question)}", "",
+        f"**Packet SHA-256** `{packet_digest}`", "",
     ]
     if review is None:
         lines.extend(["**Human review: pending**", ""])
@@ -177,13 +178,14 @@ def main(argv=None):
             ):
                 raise ValueError("Input and output must be separate files")
         packet, packet_bytes = read_json(args.packet, "Packet")
-        review = read_review(args.review, packet_bytes) if args.review is not None else None
-        report = render_report(packet, review)
+        packet_digest = hashlib.sha256(packet_bytes).hexdigest()
+        review = read_review(args.review, packet_digest) if args.review is not None else None
+        report = render_report(packet, review, packet_digest=packet_digest)
         if args.output is None:
             report.encode("utf-8")
             if args.review_template:
                 print(json.dumps({
-                    "packet_sha256": hashlib.sha256(packet_bytes).hexdigest(),
+                    "packet_sha256": packet_digest,
                     "disposition": "",
                     "note": "",
                 }, indent=2))

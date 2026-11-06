@@ -18,9 +18,9 @@ class EchoInvestigationTest(unittest.TestCase):
         self.output = self.directory / "investigation.md"
         self.packet = json.loads(FIXTURE.read_text(encoding="utf-8"))
 
-    def run_cli(self, *arguments, with_output=True):
+    def run_cli(self, *arguments, with_output=True, packet_suffix=b""):
         source = self.directory / "packet.json"
-        source.write_bytes(json.dumps(self.packet).encode("utf-8"))
+        source.write_bytes(json.dumps(self.packet).encode("utf-8") + packet_suffix)
         output_args = ["--output", str(self.output)] if with_output else []
         return subprocess.run(
             [sys.executable, "-m", "cli.echo_investigation", str(source),
@@ -38,6 +38,28 @@ class EchoInvestigationTest(unittest.TestCase):
         path = self.directory / "review.json"
         path.write_text(json.dumps(review), encoding="utf-8")
         return str(path)
+
+    def test_report_digest_matches_review_template_with_or_without_review(self):
+        template = self.run_cli("--review-template", with_output=False)
+        self.assertEqual(template.returncode, 0, template.stderr)
+        digest = json.loads(template.stdout)["packet_sha256"]
+        review = self.write_review()
+        for arguments in ((), ("--review", review)):
+            with self.subTest(reviewed=bool(arguments)):
+                result = self.run_cli(*arguments)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                report = self.output.read_text(encoding="utf-8")
+                self.assertIn(f"**Packet SHA-256** `{digest}`", report)
+
+    def test_report_digest_changes_with_packet_whitespace(self):
+        for suffix in (b"", b"\n "):
+            with self.subTest(suffix=suffix):
+                result = self.run_cli(packet_suffix=suffix)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                raw = (self.directory / "packet.json").read_bytes()
+                digest = hashlib.sha256(raw).hexdigest()
+                report = self.output.read_text(encoding="utf-8")
+                self.assertIn(f"**Packet SHA-256** `{digest}`", report)
 
     def test_matching_review_records_unresolved_disposition(self):
         review = self.write_review()
