@@ -47,3 +47,11 @@
 ## E-012 — Offline report verification CI
 
 **VERIFIED** — GitHub Actions recorded both push workflows as completed successfully on `codex/echo-plugin-security` at `e3d98f822b97e2e4a97b1d8c7cbcddbd23b83ab5`. These results cover that revision. [Integration security](https://github.com/peacefrog5085/RichardLab/actions/runs/42234444394) · [Report privacy](https://github.com/peacefrog5085/RichardLab/actions/runs/42234444378)
+
+## E-013 — Report mismatch diagnostic CI
+
+**VERIFIED** — Both push workflows completed successfully on `codex/echo-plugin-security` at `2db5bd13c1eb32e1a120751fcc084fbe793da68d`. [Integration security](https://github.com/peacefrog5085/RichardLab/actions/runs/42235804155) · [Report privacy](https://github.com/peacefrog5085/RichardLab/actions/runs/42235803993)
+
+## E-014 — Local investigation using real CI sources
+
+**VERIFIED** — The local packet used exact excerpts from the two workflow definitions at the E-013 revision. The investigation establishes which commands the definitions configure. E-013 records their observed outcomes. The packet, draft, and report are under the ignored local directory `reports/echo-777-real-ci/`. The report still uses the CLI's fixed “Synthetic evidence” label, although the excerpts came from checked-in source. Human review is pending. [Integration security source](https://github.com/peacefrog5085/RichardLab/blob/2db5bd13c1eb32e1a120751fcc084fbe793da68d/.github/workflows/integration-security.yml) · [Report privacy source](https://github.com/peacefrog5085/RichardLab/blob/2db5bd13c1eb32e1a120751fcc084fbe793da68d/.github/workflows/report-privacy.yml)

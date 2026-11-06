@@ -155,3 +155,11 @@
 - Files changed — CLI, focused tests, architecture notes, and this handoff.
 - **VERIFIED** — Three subtests failed before implementation because the position was missing. The full suite then passed 208 tests and 28 subtests. Tracked-report privacy and `git diff --check` passed. The security audit returned REVIEW for the dirty tree and absence of an Ollama listener.
 - Next action and approvals — Review the working-tree slice. Commit and push require separate approval.
+
+## CI and real-packet follow-up — ECHO-2026-11-06-04
+
+- Branch and commit — Local `codex/echo-plugin-security` at `2db5bd13c1eb32e1a120751fcc084fbe793da68d`.
+- **VERIFIED** — Both GitHub Actions workflows passed for that push. See [E-013](EVIDENCE_INDEX.md#e-013--report-mismatch-diagnostic-ci).
+- **VERIFIED** — Ran the CLI offline using excerpts from the two real workflow definitions. Packet validation, draft generation, report generation, digest matching, exact report verification, and generated-report privacy passed. Review validation rejected the blank draft as expected. Both workflow files share one repository origin. See [E-014](EVIDENCE_INDEX.md#e-014--local-investigation-using-real-ci-sources).
+- Outstanding — A human reviewer can fill in `disposition` and `note` in the local draft, validate it with `--check --review`, then generate and verify a reviewed report with the same packet and review. The generated report currently carries the CLI's fixed “Synthetic evidence” label.
+- Files changed and approvals — Updated the handoff and evidence index and created ignored local investigation artifacts. Commit and push require separate approval.
