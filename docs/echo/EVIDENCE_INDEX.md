@@ -67,3 +67,7 @@
 ## E-017 — Citation line range CI
 
 **VERIFIED** — Both push workflows completed successfully on `codex/echo-plugin-security` at `3735519c690d713c1d9e2e9b614685b4549a819d`. [Integration security](https://github.com/peacefrog5085/RichardLab/actions/runs/42241419646) · [Report privacy](https://github.com/peacefrog5085/RichardLab/actions/runs/42241419756)
+
+## E-018 — Pinned source verification CI
+
+**VERIFIED** — Both push workflows completed successfully on `codex/echo-plugin-security` at `2f5fa9a53d2fe7eaedb41b3b61c8b5204b5b5727`. [Integration security](https://github.com/peacefrog5085/RichardLab/actions/runs/42248172778) · [Report privacy](https://github.com/peacefrog5085/RichardLab/actions/runs/42248172505)

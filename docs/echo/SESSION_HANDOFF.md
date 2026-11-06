@@ -218,3 +218,11 @@
 - Completed — Added opt-in `--check-sources`. It checks every passage against its stated file and inclusive line range at the full local commit ID. Git reads disable lazy fetching and replacement objects. The mode writes no reports.
 - **VERIFIED** — Five cases failed before implementation. The full suite then passed 219 tests and 42 subtests. A temporary real-packet replay verified both pinned workflow files. Tracked-report privacy and `git diff --check` passed. The audit returned REVIEW for the dirty tree and absence of an Ollama listener.
 - Next action and approvals — Review the working-tree slice. Commit and push require separate approval.
+
+## Pinned source verification push and CI follow-up — ECHO-2026-11-06-12
+
+- Branch and commit — Local HEAD and the verified remote `codex/echo-plugin-security` ref point to `2f5fa9a53d2fe7eaedb41b3b61c8b5204b5b5727`.
+- **VERIFIED** — Integration security and Report privacy both passed for that push. See [E-018](EVIDENCE_INDEX.md#e-018--pinned-source-verification-ci). No local tests were rerun for this documentation update.
+- Files changed — Updated the handoff and evidence index. Generated reports, local packets, review drafts, and `.venv` stayed local.
+- Next action — **PROVISIONAL**. When `--check-sources` finds a mismatch, report the one-based source and passage positions in packet order and the requested line range. Use only those numbers so the diagnostic can help locate the failure without exposing source paths, IDs, or excerpts.
+- Approvals — The previous push approval covered `77be29c` and `2f5fa9a`. The proposed slice, a new commit, and any push require separate approval.
