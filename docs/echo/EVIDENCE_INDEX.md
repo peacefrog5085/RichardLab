@@ -75,3 +75,7 @@
 ## E-019 — Source mismatch diagnostic CI
 
 **VERIFIED** — Both push workflows completed successfully on `codex/echo-plugin-security` at `096e3984e875d7ce7296f53366dd662003c8b45f`. [Integration security](https://github.com/peacefrog5085/RichardLab/actions/runs/42249950137) · [Report privacy](https://github.com/peacefrog5085/RichardLab/actions/runs/42249950097)
+
+## E-020 — Local Echo status API CI
+
+**VERIFIED** — GitHub Actions recorded both push workflows as completed successfully on `codex/echo-plugin-security` at `cbd183799f12791e4c045aafb894d22d43e9c8a2`. These results cover the pushed revision of the local-only status API. [Integration security](https://github.com/peacefrog5085/RichardLab/actions/runs/42301729646) · [Report privacy](https://github.com/peacefrog5085/RichardLab/actions/runs/42301729711)

@@ -241,3 +241,11 @@
 - Files changed — Updated the handoff and evidence index. Generated reports, local packets, review drafts, and `.venv` stayed local.
 - Next action — **PROVISIONAL**. Add one offline end-to-end CLI test that verifies a pinned passage, generates and fills a review template with test data, validates the review, generates the report, and verifies the saved Markdown. Keep all test artifacts temporary.
 - Approvals — The previous push approval covered `4acb6f7` and `096e398`. The proposed slice, a new commit, and any push require separate approval.
+
+## Local Echo status API push and CI follow-up — ECHO-2026-11-06-15
+
+- Branch and commits — Pushed the approved CI documentation commit `bf989d9` and the local Echo status API commit `cbd1837`. Local HEAD and the verified remote `codex/echo-plugin-security` ref point to `cbd183799f12791e4c045aafb894d22d43e9c8a2`.
+- Delivered — The opt-in, bearer-authenticated `GET /api/v1/echo/status` serves restricted status metadata on IPv4 loopback. The commit includes contract tests, startup documentation, and the Flask test dependency in Integration security.
+- **VERIFIED** — Integration security and Report privacy both completed successfully for the exact pushed revision. See [E-020](EVIDENCE_INDEX.md#e-020--local-echo-status-api-ci). No local tests were rerun for this documentation update.
+- Working tree — This handoff and the evidence index are local edits. The pre-existing CI matrix and investigation-test edits, `.codex/`, and `docs/echo/OPERATIONS_REMEDIATION.md` stayed local.
+- Approvals — The push approval covered `bf989d9` and `cbd1837`. Committing or pushing this documentation update requires separate approval. Remote access, Copilot onboarding, and MCP require separate approval.
