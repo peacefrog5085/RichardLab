@@ -118,3 +118,48 @@ The status service runs in memory and never calls the investigation CLI or
 the lab collectors. The route emits a structured access event to the process
 log with a generated request ID, UTC timestamp, operation, and outcome.
 Remote access requires separate operator approval.
+
+## Windows AI bridge
+
+From the repository root, generate a fresh credential in one PowerShell
+session and start the API in a child process. The child inherits the session
+environment.
+
+```powershell
+$echoPython = (Resolve-Path '.venv\Scripts\python.exe').Path
+$env:RICHARDLAB_ECHO_STATUS_TOKEN = & $echoPython -c "import secrets; print(secrets.token_urlsafe(32))"
+$echoApi = Start-Process -FilePath $echoPython -ArgumentList '-m', 'cloud_service.echo_local' -WindowStyle Hidden -PassThru
+```
+
+After the API starts, run the bridge in the original PowerShell window.
+
+```powershell
+& $echoPython -m cli.echo_bridge
+```
+
+Review the JSON, then copy it into the Windows Copilot chat or another AI
+app. For example, ask it to summarize the Echo API status and distinguish
+that from the health of other lab components. This is a snapshot taken
+when you ran the command. Share only the JSON you reviewed.
+
+A trusted local AI client that supports fixed command tools can use the same
+command with an empty input schema. Set its working directory to the
+repository and supply the status credential through its local environment.
+Treat stdout as JSON only on exit code zero. A trusted local client with
+HTTP tools can use the same authenticated GET directly. Each new client
+uses the same status contract. Consumer Copilot uses the review-and-paste
+workflow.
+
+The bridge makes a direct request to the fixed loopback endpoint. It
+rejects redirects, oversized responses, and responses outside the current
+status contract. Credentials stay in the local environment and request
+header. No client registration or remote listener is needed for this
+workflow.
+
+When finished, stop the API process and clear the credential from the
+PowerShell session.
+
+```powershell
+Stop-Process -InputObject $echoApi
+Remove-Item Env:RICHARDLAB_ECHO_STATUS_TOKEN
+```
