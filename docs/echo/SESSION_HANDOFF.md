@@ -146,3 +146,12 @@
 - Files changed — Updated this handoff and the evidence index locally.
 - Next action — **PROVISIONAL**. Have `--verify-report` report the first differing byte position on a mismatch. Keep the diagnostic to the position so it can be used without echoing report contents.
 - Approvals — The previous push approval covered `d5eebb9` and `e3d98f8`. The proposed slice, a new commit, and any push require separate approval.
+
+## Report mismatch position follow-up — ECHO-2026-11-06-03
+
+- Project and repository — RichardLab Echo 777 in `peacefrog5085/RichardLab`
+- Branch and commit — Local `codex/echo-plugin-security` at `030f331` contains the approved CI documentation commit. The mismatch diagnostic is in the working tree.
+- Completed — `--verify-report` now reports the first differing byte position, counting from 1. For a matching prefix followed by truncation or appended content, it reports the first position beyond the prefix. The diagnostic contains no report text.
+- Files changed — CLI, focused tests, architecture notes, and this handoff.
+- **VERIFIED** — Three subtests failed before implementation because the position was missing. The full suite then passed 208 tests and 28 subtests. Tracked-report privacy and `git diff --check` passed. The security audit returned REVIEW for the dirty tree and absence of an Ollama listener.
+- Next action and approvals — Review the working-tree slice. Commit and push require separate approval.

@@ -81,6 +81,28 @@ class EchoInvestigationTest(unittest.TestCase):
                     self.assertEqual(pending.returncode, 1)
                     self.assertIn("Saved report does not match regenerated Markdown", pending.stderr)
 
+    def test_verify_report_reports_only_first_differing_byte_position(self):
+        generated = self.run_cli()
+        self.assertEqual(generated.returncode, 0, generated.stderr)
+        original = self.output.read_bytes()
+        offset = original.index(b"Duplicate origins")
+        for edited, position in (
+            (original[:offset] + b"Private replacement" + original[offset + 1:], offset + 1),
+            (original[:offset], offset + 1),
+            (original + b"Private addition", len(original) + 1),
+        ):
+            with self.subTest(position=position, size=len(edited)):
+                self.output.write_bytes(edited)
+                result = self.run_cli("--verify-report", str(self.output), with_output=False)
+                self.assertEqual(result.returncode, 1)
+                self.assertEqual(result.stdout, "")
+                self.assertEqual(
+                    result.stderr.strip(),
+                    f"Echo investigation: Saved report does not match regenerated Markdown "
+                    f"(first differing byte position: {position})",
+                )
+                self.assertEqual(self.output.read_bytes(), edited)
+
     def test_verify_report_rejects_body_edit_even_when_packet_digest_matches(self):
         generated = self.run_cli()
         self.assertEqual(generated.returncode, 0, generated.stderr)

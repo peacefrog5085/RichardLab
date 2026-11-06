@@ -212,8 +212,17 @@ def main(argv=None):
             report_bytes = report.encode("utf-8")
             if args.verify_report is not None:
                 with args.verify_report.open("rb") as handle:
-                    if handle.read(len(report_bytes) + 1) != report_bytes:
-                        raise ValueError("Saved report does not match regenerated Markdown")
+                    saved_bytes = handle.read(len(report_bytes) + 1)
+                if saved_bytes != report_bytes:
+                    position = next(
+                        (index for index, (saved, expected) in
+                         enumerate(zip(saved_bytes, report_bytes), start=1) if saved != expected),
+                        min(len(saved_bytes), len(report_bytes)) + 1,
+                    )
+                    raise ValueError(
+                        "Saved report does not match regenerated Markdown "
+                        f"(first differing byte position: {position})"
+                    )
                 print("Saved report matches regenerated Markdown.")
             elif args.review_template:
                 print(json.dumps({

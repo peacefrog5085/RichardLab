@@ -79,3 +79,5 @@ python -m cli.echo_investigation docs/echo/examples/synthetic-investigation.json
 ```
 
 For a report with a recorded review, supply the review with `--review reports/echo-review.json`. Verify mode validates the inputs, regenerates Markdown in memory, and compares the full UTF-8 bytes, including line endings. It writes no files. An exact match exits with code 0. A difference or an invalid or unreadable input exits with code 1.
+
+A mismatch reports the first differing byte position, counting from 1. If one report ends after a matching prefix, the position is the first byte beyond that prefix. The diagnostic contains no report text.
