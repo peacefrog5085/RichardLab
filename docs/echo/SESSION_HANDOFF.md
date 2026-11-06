@@ -98,3 +98,13 @@
 - Files changed — CLI, focused tests, architecture notes, and this handoff.
 - **VERIFIED** — The red run reported four failing subtests for the missing digest field. The full suite then passed 202 tests and 20 subtests. Tracked-report privacy, temporary sample report privacy and digest checks, and `git diff --check` passed. The security audit returned REVIEW for the dirty tree and absence of an Ollama listener.
 - Next action and approvals — Review the working-tree slice. Commit and push require separate approval.
+
+## Report packet digest push and CI follow-up — ECHO-2026-11-05-12
+
+- Project and repository — RichardLab Echo 777 in `peacefrog5085/RichardLab`
+- Objective — Record CI for the approved push of the report packet digest slice.
+- Branch and commit — Local HEAD and the verified remote `codex/echo-plugin-security` ref point to `e12490c81ac01fff269713de776b7159e3c9c988`. The generated report and `.venv` stayed local.
+- **VERIFIED** — Integration security and Report privacy both completed successfully for that push. See [E-010](EVIDENCE_INDEX.md#e-010--report-packet-digest-ci). No local tests were rerun for this documentation update.
+- Files changed — Updated this handoff and the evidence index locally.
+- Next action — **PROVISIONAL**. Add an offline `--match-report PATH` mode that compares a saved report's packet digest with the SHA-256 of the supplied packet. The result describes the digest match only.
+- Approvals — The previous push approval covered `b9feeed` and `e12490c`. The proposed slice, a new commit, and any push require separate approval.
