@@ -233,3 +233,11 @@
 - Completed — `--check-sources` mismatch errors report one-based source and passage positions in packet order and the requested inclusive line range. The message contains no paths, IDs, or excerpts. The range uses an ASCII hyphen for Windows stderr compatibility.
 - **VERIFIED** — Two subtests failed before implementation because the numeric location was missing. The full suite then passed 220 tests and 44 subtests. Tracked-report privacy and `git diff --check` passed. The security audit returned REVIEW for the dirty tree and absence of an Ollama listener.
 - Next action and approvals — Review the working-tree slice. Commit and push require separate approval.
+
+## Source mismatch diagnostic push and CI follow-up — ECHO-2026-11-06-14
+
+- Branch and commit — Local HEAD and the verified remote `codex/echo-plugin-security` ref point to `096e3984e875d7ce7296f53366dd662003c8b45f`.
+- **VERIFIED** — Integration security and Report privacy both passed for that push. See [E-019](EVIDENCE_INDEX.md#e-019--source-mismatch-diagnostic-ci). No local tests were rerun for this documentation update.
+- Files changed — Updated the handoff and evidence index. Generated reports, local packets, review drafts, and `.venv` stayed local.
+- Next action — **PROVISIONAL**. Add one offline end-to-end CLI test that verifies a pinned passage, generates and fills a review template with test data, validates the review, generates the report, and verifies the saved Markdown. Keep all test artifacts temporary.
+- Approvals — The previous push approval covered `4acb6f7` and `096e398`. The proposed slice, a new commit, and any push require separate approval.
