@@ -117,3 +117,13 @@
 - Files changed — CLI, focused tests, architecture notes, and this handoff.
 - **VERIFIED** — Five new cases failed before implementation because the mode was unavailable. The full suite then passed 205 tests and 23 subtests. A generated report with CRLF line endings matched, and tracked-report privacy and `git diff --check` passed. The security audit returned REVIEW for the dirty tree and absence of an Ollama listener.
 - Next action and approvals — Review the working-tree slice. Commit and push require separate approval.
+
+## Offline report matching push and CI follow-up — ECHO-2026-11-05-14
+
+- Project and repository — RichardLab Echo 777 in `peacefrog5085/RichardLab`
+- Objective — Record CI for the approved push of the offline report matching slice.
+- Branch and commit — Local HEAD and the verified remote `codex/echo-plugin-security` ref point to `de8441e47d10fd19c39f0ee2ca1b31e9c69f2226`. The generated report and `.venv` stayed local.
+- **VERIFIED** — Integration security and Report privacy both completed successfully for that push. See [E-011](EVIDENCE_INDEX.md#e-011--offline-report-matching-ci). No local tests were rerun for this documentation update.
+- Files changed — Updated this handoff and the evidence index locally.
+- Next action — **PROVISIONAL**. Add offline `--verify-report PATH` to regenerate Markdown in memory from the packet and optional review, then compare it with the saved report. It would catch edits to the report body even when the packet digest still matches.
+- Approvals — The previous push approval covered `d35bed4` and `de8441e`. The proposed slice, a new commit, and any push require separate approval.

@@ -39,3 +39,7 @@
 ## E-010 — Report packet digest CI
 
 **VERIFIED** — GitHub Actions recorded both push workflows as completed successfully on `codex/echo-plugin-security` at `e12490c81ac01fff269713de776b7159e3c9c988`. These results cover that revision. [Integration security](https://github.com/peacefrog5085/RichardLab/actions/runs/42149879552) · [Report privacy](https://github.com/peacefrog5085/RichardLab/actions/runs/42149879521)
+
+## E-011 — Offline report matching CI
+
+**VERIFIED** — GitHub Actions recorded both push workflows as completed successfully on `codex/echo-plugin-security` at `de8441e47d10fd19c39f0ee2ca1b31e9c69f2226`. These results cover that revision. [Integration security](https://github.com/peacefrog5085/RichardLab/actions/runs/42163033853) · [Report privacy](https://github.com/peacefrog5085/RichardLab/actions/runs/42163033889)
