@@ -96,16 +96,20 @@ def render_report(packet, review=None):
     ])
     for number, claim in enumerate(require_items(packet.get("claims"), "Claims"), 1):
         claim_text = require_text(claim.get("text"), "Claim")
-        citations = claim.get("citations")
-        if citations != []:
-            require_items(citations, "Citations")
+        if "citations" not in claim:
+            raise ValueError(f"Missing citations in claim {number}")
+        citations = claim["citations"]
+        if not isinstance(citations, list):
+            raise ValueError(f"Citations in claim {number} must be a list")
+        if any(not isinstance(citation, dict) for citation in citations):
+            raise ValueError(f"Citations in claim {number} must contain objects")
         lines.extend([f"## Claim {number}", "", markdown(claim_text), ""])
         origins = set()
         relations = set()
-        for citation in citations:
-            source_id = require_text(citation.get("source"), "Citation source")
-            passage_id = require_text(citation.get("passage"), "Citation passage")
-            quote = require_text(citation.get("quote"), "Citation quote")
+        for citation_number, citation in enumerate(citations, 1):
+            source_id = require_text(citation.get("source"), f"Citation {citation_number} source in claim {number}")
+            passage_id = require_text(citation.get("passage"), f"Citation {citation_number} passage in claim {number}")
+            quote = require_text(citation.get("quote"), f"Citation {citation_number} quote in claim {number}")
             relation = citation.get("relation")
             if source_id not in sources:
                 raise ValueError(f"Unknown source in claim {number}")
@@ -155,22 +159,34 @@ def publish_report(path, report):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("packet", type=Path, help="Local JSON packet with synthetic excerpts")
-    parser.add_argument("--output", type=Path, required=True, help="Local Markdown report path")
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--output", type=Path, help="Local Markdown report path")
+    mode.add_argument("--check", action="store_true", help="Validate inputs without writing a report")
     parser.add_argument("--review", type=Path, help="Local JSON review bound to the packet digest")
     args = parser.parse_args(argv)
     try:
-        if args.output.suffix.lower() != ".md":
-            raise ValueError("Output must have a .md extension")
-        output_path = args.output.resolve()
-        if args.packet.resolve() == output_path or (
-            args.review is not None and args.review.resolve() == output_path
-        ):
-            raise ValueError("Input and output must be separate files")
+        if args.output is not None:
+            if args.output.suffix.lower() != ".md":
+                raise ValueError("Output must have a .md extension")
+            output_path = args.output.resolve()
+            if args.packet.resolve() == output_path or (
+                args.review is not None and args.review.resolve() == output_path
+            ):
+                raise ValueError("Input and output must be separate files")
         packet, packet_bytes = read_json(args.packet, "Packet")
         review = read_review(args.review, packet_bytes) if args.review is not None else None
-        publish_report(args.output, render_report(packet, review))
-    except (OSError, UnicodeError):
-        print("Echo investigation failed to read an input or publish the report.", file=sys.stderr)
+        report = render_report(packet, review)
+        if args.check:
+            report.encode("utf-8")
+            print("Validation passed.")
+        else:
+            publish_report(args.output, report)
+    except UnicodeError:
+        print("Echo investigation: Packet or review text cannot be encoded as UTF-8.", file=sys.stderr)
+        return 1
+    except OSError:
+        action = "read an input" if args.check else "read an input or publish the report"
+        print(f"Echo investigation failed to {action}.", file=sys.stderr)
         return 1
     except ValueError as exc:
         print(f"Echo investigation: {exc}", file=sys.stderr)

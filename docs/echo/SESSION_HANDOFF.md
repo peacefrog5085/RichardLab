@@ -50,3 +50,13 @@
 - Files changed — Updated this handoff and the evidence index locally.
 - Next action — **PROVISIONAL**. Add a local `--check` mode that runs the existing packet and optional review validation without writing a report. Use it to catch stale reviews before selecting an output path.
 - Approvals — The previous push approval covered `6bfdf70` and `fa2da35`. The proposed slice, a new commit, and any push require separate approval.
+
+## Offline check follow-up — ECHO-2026-11-05-07
+
+- Project and repository — RichardLab Echo 777 in `peacefrog5085/RichardLab`
+- Branch and commit — Local `codex/echo-plugin-security` at `6e259c6` contains the approved CI documentation commit. The check slice is in the working tree.
+- Objective and completed work — Added `--check` to validate the packet and optional review in memory. Valid input needs no output path. Stale reviews and invalid citations return errors, and combining `--check` with `--output` is rejected.
+- Files changed — CLI, focused tests, architecture notes, and this handoff.
+- **VERIFIED** — The red run reported five failures because the parser required `--output` or rejected `--check`. After implementation, the focused suite passed 10 tests and five subtests. The full suite passed 195 tests and five subtests. The synthetic check and tracked-report privacy check passed. The security audit returned REVIEW for the dirty tree and absence of an Ollama listener.
+- **VERIFIED before the approved local commit** — The final slice includes more specific citation errors and checks for preserving inputs and existing reports without network access. The full suite passed 197 tests and 13 subtests. Tracked-report privacy and `git diff --check` passed.
+- Next action and approvals — The operator approved the local check-slice commit. Pushing either local commit requires separate approval.

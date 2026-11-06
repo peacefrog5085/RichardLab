@@ -37,3 +37,19 @@ Pass `--review reports/echo-review.json` to record a local review. The review fi
 ```
 
 On PowerShell, get the digest with `(Get-FileHash -Algorithm SHA256 docs/echo/examples/synthetic-investigation.json).Hash`. The digest covers the exact file bytes, including whitespace and line endings. A missing review argument leaves human review pending. A supplied review with an invalid or stale digest fails before publishing. The recorded disposition and note describe the reviewer's judgment, and the report still shows conflicting evidence. The digest provides packet matching only.
+
+### Check inputs before publishing
+
+```powershell
+python -m cli.echo_investigation docs/echo/examples/synthetic-investigation.json --check
+```
+
+To check the packet together with a local human review, run:
+
+```powershell
+python -m cli.echo_investigation docs/echo/examples/synthetic-investigation.json --check --review reports/echo-review.json
+```
+
+Check mode runs the same validation as report generation, including quote matching and review digest verification. It uses local files, leaves the packet and review intact, and creates or modifies no report files. Each claim must include a citations list. Use an explicit empty list for a claim with no evidence citations.
+
+Choose exactly one of `--check` and `--output`. Check mode prints `Validation passed.` and exits with code 0 on success. It prints an error to standard error and exits with code 1 for invalid or unreadable inputs. Command-line usage errors exit with code 2.

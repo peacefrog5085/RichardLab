@@ -18,12 +18,13 @@ class EchoInvestigationTest(unittest.TestCase):
         self.output = self.directory / "investigation.md"
         self.packet = json.loads(FIXTURE.read_text(encoding="utf-8"))
 
-    def run_cli(self, *arguments):
+    def run_cli(self, *arguments, with_output=True):
         source = self.directory / "packet.json"
         source.write_bytes(json.dumps(self.packet).encode("utf-8"))
+        output_args = ["--output", str(self.output)] if with_output else []
         return subprocess.run(
             [sys.executable, "-m", "cli.echo_investigation", str(source),
-             "--output", str(self.output), *arguments],
+             *output_args, *arguments],
             cwd=ROOT, capture_output=True, text=True, encoding="utf-8",
         )
 
@@ -48,6 +49,80 @@ class EchoInvestigationTest(unittest.TestCase):
         self.assertIn("Both accounts remain plausible.", report)
         self.assertIn("Conflicting evidence", report)
         self.assertNotIn("Human review: pending", report)
+
+    def test_check_accepts_valid_packet_and_optional_review_without_writing(self):
+        review = self.write_review()
+        for review_args in ((), ("--review", review)):
+            with self.subTest(review_args=review_args):
+                result = self.run_cli("--check", *review_args, with_output=False)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn("Validation passed.", result.stdout)
+                self.assertEqual(
+                    {path.name for path in self.directory.iterdir()},
+                    {"packet.json", "review.json"},
+                )
+
+    def test_check_rejects_stale_review(self):
+        review = self.write_review()
+        self.packet["question"] += " "
+        result = self.run_cli("--check", "--review", review, with_output=False)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Review digest does not match packet", result.stderr)
+        self.assertFalse(self.output.exists())
+
+    def test_check_rejects_missing_and_malformed_citations(self):
+        for citations, message in (
+            (None, "Missing citations in claim 1"),
+            ({}, "Citations in claim 1 must be a list"),
+            (["not an object"], "Citations in claim 1 must contain objects"),
+            ([{"source": "S1"}], "Citation 1 passage in claim 1 must be nonempty text"),
+        ):
+            with self.subTest(citations=citations):
+                claim = self.packet["claims"][0]
+                if citations is None:
+                    del claim["citations"]
+                else:
+                    claim["citations"] = citations
+                result = self.run_cli("--check", with_output=False)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(message, result.stderr)
+                self.assertFalse(self.output.exists())
+
+    def test_check_rejects_invalid_citations(self):
+        citation = self.packet["claims"][0]["citations"][0]
+        for field, value, message in (
+            ("source", "missing", "Unknown source"),
+            ("passage", "missing", "Unknown passage"),
+            ("quote", "fabricated quote", "Quote mismatch"),
+            ("relation", "unknown", "Invalid citation relationship"),
+        ):
+            with self.subTest(field=field), patch.dict(citation, {field: value}):
+                result = self.run_cli("--check", with_output=False)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(message, result.stderr)
+                self.assertFalse(self.output.exists())
+
+    def test_check_preserves_inputs_and_existing_report(self):
+        from cli.echo_investigation import main
+
+        packet = self.directory / "packet.json"
+        packet.write_bytes(json.dumps(self.packet).encode("utf-8"))
+        review = Path(self.write_review())
+        self.output.write_bytes(b"previous report")
+        paths = (packet, review, self.output)
+        before = [(path.read_bytes(), path.stat().st_mtime_ns) for path in paths]
+
+        with patch("socket.socket", side_effect=AssertionError("Network access attempted")):
+            self.assertEqual(main([str(packet), "--check", "--review", str(review)]), 0)
+
+        self.assertEqual([(path.read_bytes(), path.stat().st_mtime_ns) for path in paths], before)
+        self.assertCountEqual(self.directory.iterdir(), paths)
+
+    def test_check_rejects_output_option(self):
+        result = self.run_cli("--check")
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("not allowed with argument", result.stderr)
+        self.assertFalse(self.output.exists())
 
     def test_stale_review_preserves_existing_report(self):
         review = self.write_review()
