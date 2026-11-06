@@ -187,3 +187,11 @@
 - Local artifact — `reports/echo-777-real-ci/report-real-with-paths.md` was generated from the existing real packet. It passed digest matching, exact verification, and privacy checks. The earlier report was preserved. Human review remains pending.
 - **VERIFIED** — Seven new cases failed before implementation. The full suite then passed 212 tests and 36 subtests. Tracked-report privacy and `git diff --check` passed. The security audit returned REVIEW for the dirty tree and absence of an Ollama listener.
 - Next action and approvals — Review the working-tree slice. Commit and push require separate approval.
+
+## Citation source path push and CI follow-up — ECHO-2026-11-06-08
+
+- Branch and commit — Local HEAD and the verified remote `codex/echo-plugin-security` ref point to `cb7d89285343b6f6f6d10eaabdddf47063bef741`.
+- **VERIFIED** — Integration security and Report privacy both passed for that push. See [E-016](EVIDENCE_INDEX.md#e-016--citation-source-path-ci). No local tests were rerun for this documentation update.
+- Files changed — Updated the handoff and evidence index. Generated reports, local packets, review drafts, and `.venv` stayed local.
+- Next action — **PROVISIONAL**. Let a source with a repository-relative path supply optional one-based line ranges keyed by passage ID. Render those ranges in citations so reviewers can find excerpts in the original file. Validate the ranges against the packet schema and treat them as supplied metadata.
+- Approvals — The previous push approval covered `31931e4` and `cb7d892`. The proposed slice, a new commit, and any push require separate approval.

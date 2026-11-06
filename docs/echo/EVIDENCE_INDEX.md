@@ -59,3 +59,7 @@
 ## E-015 — Real-evidence label CI
 
 **VERIFIED** — Both push workflows completed successfully on `codex/echo-plugin-security` at `c8bb8b03ead558c0e03405b65d2560628f55f295`. [Integration security](https://github.com/peacefrog5085/RichardLab/actions/runs/42237362749) · [Report privacy](https://github.com/peacefrog5085/RichardLab/actions/runs/42237362731)
+
+## E-016 — Citation source path CI
+
+**VERIFIED** — Both push workflows completed successfully on `codex/echo-plugin-security` at `cb7d89285343b6f6f6d10eaabdddf47063bef741`. [Integration security](https://github.com/peacefrog5085/RichardLab/actions/runs/42238607431) · [Report privacy](https://github.com/peacefrog5085/RichardLab/actions/runs/42238607488)
