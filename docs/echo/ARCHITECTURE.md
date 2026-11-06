@@ -26,6 +26,10 @@ The CLI uses the Python standard library and local files. It validates and rende
 
 Set the top-level packet field `"evidence_kind": "real"` for excerpts from actual sources. Use `"synthetic"` for constructed examples. Packets without this field retain the synthetic label. The report displays the packet author's classification.
 
+An optional source `path` such as `.github/workflows/report-privacy.yml` appears in its citations. Use a repository-relative path with forward slashes and omit dot and parent segments. The CLI displays the path as metadata and validates the quote against the supplied passage. Distinct origin counts still use the source's `origin` field.
+
+If an older report omitted paths already present in the packet, regenerate the report for byte-for-byte verification. Its original packet digest still works with `--match-report`.
+
 ### Optional human review
 
 Pass `--review reports/echo-review.json` to record a local review. The review file contains three fields.

@@ -179,3 +179,11 @@
 - Files changed — Updated the handoff and evidence index. Generated reports, local packets, review drafts, and `.venv` stayed local.
 - Next action — **PROVISIONAL**. Render optional repository-relative source paths in report citations. The real CI packet already records a path for each workflow, so reviewers could distinguish files that share the same origin. Paths would be rendered as metadata without opening files.
 - Approvals — The previous push approval covered `131b578` and `c8bb8b0`. The proposed slice, a new commit, and any push require separate approval.
+
+## Citation source path follow-up — ECHO-2026-11-06-07
+
+- Branch and commit — Local `codex/echo-plugin-security` at `31931e4` contains the approved CI documentation commit. The source path slice is in the working tree.
+- Completed — Citations display optional repository-relative source paths as metadata. Origin counting still uses `origin`. Packets without paths keep their citation format.
+- Local artifact — `reports/echo-777-real-ci/report-real-with-paths.md` was generated from the existing real packet. It passed digest matching, exact verification, and privacy checks. The earlier report was preserved. Human review remains pending.
+- **VERIFIED** — Seven new cases failed before implementation. The full suite then passed 212 tests and 36 subtests. Tracked-report privacy and `git diff --check` passed. The security audit returned REVIEW for the dirty tree and absence of an Ollama listener.
+- Next action and approvals — Review the working-tree slice. Commit and push require separate approval.

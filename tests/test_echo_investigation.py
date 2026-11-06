@@ -39,6 +39,28 @@ class EchoInvestigationTest(unittest.TestCase):
         path.write_text(json.dumps(review), encoding="utf-8")
         return str(path)
 
+    def test_citations_distinguish_source_paths_without_splitting_origin(self):
+        paths = (".github/workflows/first.yml", ".github/workflows/second.yml")
+        for source, path in zip(self.packet["sources"], paths):
+            source["path"] = path
+        result = self.run_cli()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        report = self.output.read_text(encoding="utf-8")
+        for source_id, path in zip(("S1", "S2"), paths):
+            citation = next(line for line in report.splitlines() if line.startswith(f"- **{source_id}/P1**"))
+            self.assertIn(path, citation)
+        self.assertIn("2 distinct origins across 3 citations", report)
+
+    def test_citations_reject_non_repository_relative_source_paths(self):
+        for path in ("/private/file.yml", "../file.yml", "dir/../file.yml",
+                     "C:/private/file.yml", r"\\host\share\file.yml", None):
+            with self.subTest(path=path):
+                self.packet["sources"][0]["path"] = path
+                result = self.run_cli()
+                self.assertEqual(result.returncode, 1)
+                self.assertIn("Source path must be repository-relative", result.stderr)
+                self.assertFalse(self.output.exists())
+
     def test_real_packet_report_label_matches_and_verifies(self):
         self.packet["evidence_kind"] = "real"
         generated = self.run_cli()
@@ -309,6 +331,7 @@ class EchoInvestigationTest(unittest.TestCase):
             "Human review: pending", "Evidence needed",
             "2 distinct origins across 3 citations",
             "S1/P1", "S2/P1", "S3/P1",
+            "- **S1/P1** (trial-log, supports)",
             "The beacon flashed during the trial.",
             "The beacon stayed dark during the trial.",
         ):

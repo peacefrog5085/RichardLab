@@ -91,6 +91,18 @@ def render_report(packet, review=None, *, packet_digest):
     for source in require_items(packet.get("sources"), "Sources"):
         source_id = require_text(source.get("id"), "Source ID")
         origin = require_text(source.get("origin"), "Source origin").strip().casefold()
+        location = markdown(origin)
+        if "path" in source:
+            path = source["path"]
+            if (
+                not isinstance(path, str)
+                or not path.isprintable()
+                or "\\" in path
+                or ":" in path
+                or any(part in ("", ".", "..") for part in path.split("/"))
+            ):
+                raise ValueError("Source path must be repository-relative")
+            location += f", {markdown(path)}"
         passages = source.get("passages")
         if source_id in sources:
             raise ValueError("Duplicate source ID")
@@ -99,7 +111,7 @@ def render_report(packet, review=None, *, packet_digest):
         for passage_id, passage in passages.items():
             require_text(passage_id, "Passage ID")
             require_text(passage, "Passage")
-        sources[source_id] = (origin, passages)
+        sources[source_id] = (origin, location, passages)
 
     lines = [
         "# Echo investigation", "", f"**{evidence_kind.capitalize()} evidence**", "",
@@ -138,7 +150,7 @@ def render_report(packet, review=None, *, packet_digest):
             relation = citation.get("relation")
             if source_id not in sources:
                 raise ValueError(f"Unknown source in claim {number}")
-            origin, passages = sources[source_id]
+            origin, location, passages = sources[source_id]
             if passage_id not in passages:
                 raise ValueError(f"Unknown passage in claim {number}")
             if quote not in passages[passage_id]:
@@ -148,7 +160,7 @@ def render_report(packet, review=None, *, packet_digest):
             origins.add(origin)
             relations.add(relation)
             reference = markdown(f"{source_id}/{passage_id}")
-            lines.append(f"- **{reference}** ({markdown(origin)}, {relation}) — {markdown(quote)}")
+            lines.append(f"- **{reference}** ({location}, {relation}) — {markdown(quote)}")
         if citations:
             lines.extend(["", f"{len(origins)} distinct origins across {len(citations)} citations."])
         if len(origins) < len(citations):
