@@ -19,3 +19,7 @@
 ## E-005 — Historical memory
 
 **VERIFIED** — The local October 8 artifact `docs/RICHARDLAB_MIGRATION_REPORT.md` describes Basic Memory `main` and its historical archive map. Current service state is **PROVISIONAL**. Use the original archive records if separately authorized to inspect them.
+
+## E-006 — Offline investigation CI
+
+**VERIFIED** — GitHub Actions recorded both push workflows as completed successfully on `codex/echo-plugin-security` at `4b3a893b6e7c5d68322939350ef165c065da6018`. These results cover that revision. [Integration security](https://github.com/peacefrog5085/RichardLab/actions/runs/42142106386) · [Report privacy](https://github.com/peacefrog5085/RichardLab/actions/runs/42142106374)

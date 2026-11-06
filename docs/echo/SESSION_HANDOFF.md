@@ -6,7 +6,7 @@
 - Commit — `7e9ae40258ac65735fccd97f652115aca8d2fd7e`
 - Objective — Build and verify the approved first offline investigation CLI.
 - Completed — Added a local JSON-to-Markdown command, a synthetic beacon packet, and focused tests. The report preserves opposing accounts and duplicate origins for skeptical review.
-- Files changed — Added `cli/echo_investigation.py`, `tests/test_echo_investigation.py`, and `docs/echo/examples/synthetic-investigation.json`. Updated architecture, current state, decisions, next actions, and this handoff. The continuity records from ECHO-2026-11-05-01 and this slice are local working-tree additions.
+- Files changed — Added `cli/echo_investigation.py`, `tests/test_echo_investigation.py`, and `docs/echo/examples/synthetic-investigation.json`. Updated architecture, current state, decisions, next actions, and this handoff. The continuity records from ECHO-2026-11-05-01 and this slice were local working-tree additions at session close.
 - Tests and checks — **VERIFIED**. The first test failed with `No module named cli.echo_investigation` before implementation. Bundled Python 3.12 ran `python -m unittest discover -s tests -p test_echo_investigation.py -v` with three passing tests. Tracked-report privacy and the generated sample privacy check passed. The security audit returned REVIEW. The full pytest suite could not start because pytest was unavailable in the bundled environment.
 - Decisions — See [D-003](DECISIONS.md). The prior session verified cold resume and stale-handoff detection against the pinned base.
 - Outstanding — Human review of investigation evidence. The audit's REVIEW findings were the dirty working tree and absence of an Ollama listener. The generated sample is available locally at `reports/echo-investigation.md`.
@@ -20,3 +20,13 @@
 - **VERIFIED** — `./.venv/Scripts/python.exe -m pytest -q -p no:cacheprovider --basetemp .venv/pytest-tmp` ran the full configured suite. Result was 188 passed and 3 subtests passed in 35.53 seconds.
 - Files changed — Updated this handoff and the next-actions record. No application files changed during the verification follow-up.
 - Next action — Review the investigation report. Commit and push each require separate approval.
+
+## Push and CI follow-up — ECHO-2026-11-05-04
+
+- Project and repository — RichardLab Echo 777 in `peacefrog5085/RichardLab`
+- Objective — Push the approved commit, verify GitHub Actions, and record the results.
+- Branch and commit — Local HEAD and the verified remote `codex/echo-plugin-security` ref point to `4b3a893b6e7c5d68322939350ef165c065da6018`.
+- **VERIFIED** — Integration security and Report privacy both completed successfully for that exact push. See [E-006](EVIDENCE_INDEX.md#e-006--offline-investigation-ci). No local tests were rerun for this documentation update.
+- Files changed — Updated this handoff and the evidence index locally. The generated report and `.venv` remain ignored local artifacts.
+- Next action — **PROVISIONAL**. Add an optional local human-review record tied to the exact investigation packet. A valid review could record that conflicting evidence remains unresolved. Missing review stays pending. Stale review fails before report publication.
+- Approvals — The earlier commit and push approvals covered `4b3a893`. The proposed slice and any new commit or push require separate approval.
