@@ -203,3 +203,11 @@
 - **VERIFIED** — Six new cases failed before implementation. The full suite then passed 215 tests and 40 subtests. A temporary replay rendered line numbers from the pinned workflow files and passed exact verification. Tracked-report privacy and `git diff --check` passed. The security audit returned REVIEW for the dirty tree and absence of an Ollama listener.
 - Component status — Local Hive, Council, approval, and integration gateway tests passed as part of the suite. No separately named Queen component was found in the tracked code or docs. Live deployment and provider health were not checked.
 - Next action and approvals — Review the working-tree slice. Commit and push require separate approval.
+
+## Citation line range push and CI follow-up — ECHO-2026-11-06-10
+
+- Branch and commit — Local HEAD and the verified remote `codex/echo-plugin-security` ref point to `3735519c690d713c1d9e2e9b614685b4549a819d`.
+- **VERIFIED** — Integration security and Report privacy both passed for that push. See [E-017](EVIDENCE_INDEX.md#e-017--citation-line-range-ci). No local tests were rerun for this documentation update.
+- Files changed — Updated the handoff and evidence index. Generated reports, local packets, review drafts, and `.venv` stayed local.
+- Next action — **PROVISIONAL**. Add an opt-in offline check for sources pinned to a commit already present in the local Git repository. Compare the supplied passage with the stated line range in the file at that commit. Keep this separate from ordinary packet validation so packets without Git locators still work.
+- Approvals — The previous push approval covered `5455d80` and `3735519`. The proposed slice, a new commit, and any push require separate approval.

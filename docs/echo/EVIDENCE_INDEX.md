@@ -63,3 +63,7 @@
 ## E-016 — Citation source path CI
 
 **VERIFIED** — Both push workflows completed successfully on `codex/echo-plugin-security` at `cb7d89285343b6f6f6d10eaabdddf47063bef741`. [Integration security](https://github.com/peacefrog5085/RichardLab/actions/runs/42238607431) · [Report privacy](https://github.com/peacefrog5085/RichardLab/actions/runs/42238607488)
+
+## E-017 — Citation line range CI
+
+**VERIFIED** — Both push workflows completed successfully on `codex/echo-plugin-security` at `3735519c690d713c1d9e2e9b614685b4549a819d`. [Integration security](https://github.com/peacefrog5085/RichardLab/actions/runs/42241419646) · [Report privacy](https://github.com/peacefrog5085/RichardLab/actions/runs/42241419756)
